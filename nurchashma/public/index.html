@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nurchashma — Asosiy</title>
+  <meta name="description" content="Nurchashma — bolajonlar uchun xavfsiz va foydali multfilmlar, ertaklar va qo‘shiqlar.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/vendor/fonts/fredoka/index.css">
+  <link rel="stylesheet" href="/vendor/fonts/nunito/index.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main>
+    <!-- Mehmonlar uchun -->
+    <section class="wrap" id="hero" hidden>
+      <div class="hero">
+        <div>
+          <h1>Bolajonlar uchun xavfsiz multfilmlar</h1>
+          <p class="lead">Reklamasiz va ota-ona nazorati bilan. 2–6 yoshli bolalar uchun.</p>
+          <div class="hero__actions">
+            <a class="btn btn--big" href="/profile">Ota-onalar uchun kirish</a>
+            <a class="btn btn--big btn--ghost" href="/pro">Pro obuna haqida</a>
+          </div>
+        </div>
+        <svg class="scene" viewBox="0 0 420 320" aria-hidden="true">
+          <ellipse cx="210" cy="262" rx="205" ry="52" fill="#3FD1A6"/>
+          <g fill="#fff"><circle cx="72" cy="86" r="24"/><circle cx="104" cy="72" r="32"/><circle cx="138" cy="88" r="24"/><rect x="72" y="86" width="66" height="26" rx="13"/></g>
+          <g fill="#fff"><circle cx="320" cy="60" r="18"/><circle cx="342" cy="50" r="24"/><circle cx="366" cy="62" r="17"/><rect x="320" y="60" width="46" height="19" rx="9.5"/></g>
+          <circle cx="215" cy="168" r="88" fill="#3E6BF4"/>
+          <circle cx="215" cy="168" r="70" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="6"/>
+          <path d="M197 132v72l62-36z" fill="#fff" stroke="#fff" stroke-width="12" stroke-linejoin="round"/>
+          <path transform="translate(340 150) scale(1.3)" d="M0-14C2-4 4-2 14 0 4 2 2 4 0 14-2 4-4 2-14 0-4-2-2-4 0-14Z" fill="#FF8A78"/>
+          <path transform="translate(86 186) scale(1.1)" d="M0-14C2-4 4-2 14 0 4 2 2 4 0 14-2 4-4 2-14 0-4-2-2-4 0-14Z" fill="#A58BFF"/>
+          <path transform="translate(318 258)" d="M0-14C2-4 4-2 14 0 4 2 2 4 0 14-2 4-4 2-14 0-4-2-2-4 0-14Z" fill="#fff"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Kirgan foydalanuvchi uchun -->
+    <div class="wrap greeting" id="greeting" hidden></div>
+
+    <div class="wrap">
+      <div id="notice"></div>
+
+      <section class="block" id="picker-block" hidden>
+        <h2><span class="h-ico" aria-hidden="true">👋</span>Kim tomosha qiladi?</h2>
+        <div class="kids" id="picker"></div>
+      </section>
+
+      <section class="block" id="cats-block" hidden>
+        <h2 class="sr-only">Bo‘limlar</h2>
+        <div class="tiles" id="tiles"></div>
+      </section>
+
+      <section class="block" id="recent-block" hidden>
+        <h2><span class="h-ico" aria-hidden="true">🕘</span>Yaqinda ko‘rilganlar</h2>
+        <div class="videos" id="recent"></div>
+      </section>
+
+      <section class="block" id="channels-block" hidden>
+        <h2><span class="h-ico" aria-hidden="true">⭐</span>Kanallar</h2>
+        <div class="bubbles" id="channels"></div>
+      </section>
+
+      <section class="block">
+        <h2><span class="h-ico" aria-hidden="true">✨</span>Yangi videolar</h2>
+        <div class="videos" id="latest" aria-live="polite"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="/vendor/supabase.js"></script>
+  <script type="module" src="/js/index.js"></script>
+</body>
+</html>

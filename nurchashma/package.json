@@ -1,0 +1,23 @@
+{
+  "name": "nurchashma",
+  "version": "1.0.0",
+  "description": "Nurchashma sayti (Node.js + Supabase)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --watch --env-file-if-exists=.env server.js"
+  },
+  "dependencies": {
+    "@fontsource-variable/fredoka": "^5.3.0",
+    "@fontsource-variable/nunito": "^5.3.0",
+    "@supabase/supabase-js": "^2.116.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.21.0"
+  }
+}

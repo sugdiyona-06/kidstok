@@ -1,0 +1,22 @@
+# Render.com "Blueprint": New + → Blueprint orqali shu repodan avtomatik sozlanadi
+services:
+  - type: web
+    name: nurchashma
+    runtime: node
+    plan: free            # Sinov uchun. Doimiy ishlashi kerak bo'lsa "starter" ga o'tkazing
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 24.21.0
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false       # qiymatni Render Dashboard'da o'zingiz kiritasiz
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: PRO_CONTACT_URL
+        sync: false
