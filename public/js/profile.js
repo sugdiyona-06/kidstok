@@ -17,6 +17,7 @@ function showTab(name) {
     tabs[key].setAttribute("aria-selected", String(key === name));
     forms[key].hidden = key !== name;
   }
+  $("#forgot-form").hidden = true;
   errorBox.hidden = true;
   noteBox.hidden = true;
 }
@@ -51,6 +52,32 @@ async function withBusy(form, task) {
     button.disabled = false;
   }
 }
+
+/* ---------- Parolni unutdim ---------- */
+const forgotForm = $("#forgot-form");
+$("#forgot-link").addEventListener("click", (event) => {
+  event.preventDefault();
+  forms.login.hidden = true;
+  forgotForm.hidden = false;
+  errorBox.hidden = true;
+  noteBox.hidden = true;
+  $("#forgot-email").focus();
+});
+$("#forgot-cancel").addEventListener("click", () => {
+  forgotForm.hidden = true;
+  forms.login.hidden = false;
+});
+forgotForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const email = new FormData(forgotForm).get("email");
+  withBusy(forgotForm, async () => {
+    const sb = await getSupabase();
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/reset` });
+    if (error) return showError(humanizeAuthError(error));
+    noteBox.textContent = "Agar bu email ro'yxatdan o'tgan bo'lsa, parolni yangilash havolasi yuborildi. Xat kelmasa, administrator bilan bog'laning.";
+    noteBox.hidden = false;
+  });
+});
 
 forms.login.addEventListener("submit", (event) => {
   event.preventDefault();

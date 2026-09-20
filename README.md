@@ -10,8 +10,10 @@
 |---|---|
 | **Mehmon** | Videolar ro‘yxatini ko‘radi, lekin ijro eta olmaydi |
 | **Ota-ona** | Ro‘yxatdan o‘tadi, PIN o‘rnatadi, 6 tagacha bola profili yaratadi (ism, yosh 2–6, rasm, kunlik limit), bola tarixini ko‘radi |
-| **Bola** (ota-ona akkaunti ichida) | Video ko‘radi, yoqtiradi, ijro ro‘yxati tuzadi, kanallarga obuna bo‘ladi |
+| **Bola** (ota-ona akkaunti ichida) | Ikki formatda video ko‘radi: oddiy (uzun, 16:9) va **Shorts** (tik lenta, surib ko‘riladi); yoqtiradi, ijro ro‘yxati tuzadi, kanallarga obuna bo‘ladi |
 | **Admin** | Video/kanal/bo‘lim qo‘shadi, Pro obunani beradi yoki bekor qiladi, rollarni boshqaradi |
+
+Menyu: **Asosiy · Shorts · Qidiruv · Profil**. Shorts sahifasida videolar birin-ketin tik lentada chiqadi (telefonda surish, kompyuterda ↑↓ tugmalari), tugagach keyingisiga o‘zi o‘tadi.
 
 Ota-ona nazorati: 4 xonali PIN (5 marta xato → 5 daqiqa qulf), yoshga mos videolar, kunlik tomosha limiti (O‘zbekiston vaqti bilan), tarix.
 
@@ -26,6 +28,16 @@ Ota-ona nazorati: 4 xonali PIN (5 marta xato → 5 daqiqa qulf), yoshga mos vide
 2. **SQL Editor** → yangi so‘rov → `supabase/schema.sql` faylining hammasini joylab **Run** bosing.
    Bu jadvallarni, xavfsizlik qoidalarini, `videos` (yopiq) va `thumbnails` (ochiq) fayl bucketlarini va 4 ta boshlang‘ich bo‘limni yaratadi. Qayta ishga tushirish xavfsiz.
    > Eski “maqolalar” versiyasidan yangilayotgan bo‘lsangiz, `posts` jadvali o‘chiriladi.
+
+   **Shorts qo‘shilishidan oldin o‘rnatgan bo‘lsangiz** (videolar jadvali bor, `format` ustuni yo‘q), faqat shu yangilashni ishga tushiring:
+   ```sql
+   alter table public.videos add column if not exists format text not null default 'long';
+   alter table public.videos drop constraint if exists videos_format_check;
+   alter table public.videos add constraint videos_format_check check (format in ('long', 'short'));
+   create index if not exists videos_format_idx on public.videos (format, created_at desc);
+   notify pgrst, 'reload schema';
+   ```
+   Mavjud videolar avtomatik “oddiy video” bo‘lib qoladi.
 3. **Project Settings → API Keys** bo‘limidan uchta narsani oling: `Project URL`, `anon`/`publishable` kalit, `service_role`/`secret` kalit.
 4. **Authentication → Sign In / Providers → Email** da “Confirm email” yoqilgan bo‘lsa, foydalanuvchilar pochtani tasdiqlaydi. Sinash paytida o‘chirib qo‘ysangiz qulay.
 5. Fayl limiti: bepul tarifda umumiy limit odatda 50 MB (**Storage → Settings**). Videolar shu chegaradan oshmasin.
@@ -56,14 +68,21 @@ Profil sahifasida **Admin panel** tugmasi paydo bo‘ladi (`/admin`).
 
 Admin panelda: **Kanallar** → kanal yarating (ixtiyoriy) → **Videolar** → **Yangi video**.
 
-- **Video:** MP4 (H.264) yoki WebM, 1–3 daqiqa, 50 MB gacha. Davomiyligi avtomatik aniqlanadi.
-- **Muqova:** JPG/PNG/WebP, 16:9 nisbatda, 5 MB gacha (o‘zingiz yuklaysiz).
+- **Format:** “Oddiy video” (gorizontal 16:9, 1–3 daqiqa) yoki “Shorts” (tik 9:16, 60 soniyagacha tavsiya). Tik video tanlansa, format o‘zi “Shorts” bo‘ladi (kerak bo‘lsa o‘zgartirasiz).
+- **Video:** MP4 (H.264) yoki WebM, 50 MB gacha. Davomiyligi avtomatik aniqlanadi.
+- **Muqova:** JPG/PNG/WebP, 5 MB gacha (o‘zingiz yuklaysiz). Oddiy video uchun 16:9, Shorts uchun tik 9:16 rasm.
 - **Yosh:** “qaysi yoshdan boshlab” — bola yoshi bundan kichik bo‘lsa, video unga ko‘rinmaydi.
 
 Videoni yengil qilish uchun ([ffmpeg](https://ffmpeg.org)):
 
 ```bash
 ffmpeg -i asl.mov -vf "scale=-2:480" -c:v libx264 -crf 26 -preset slow -c:a aac -b:a 96k -movflags +faststart video.mp4
+```
+
+Shorts uchun (tik 480×854):
+
+```bash
+ffmpeg -i asl.mov -vf "scale=480:854:force_original_aspect_ratio=increase,crop=480:854" -c:v libx264 -crf 26 -preset slow -c:a aac -b:a 96k -movflags +faststart short.mp4
 ```
 
 3 daqiqalik 480p video taxminan 15–25 MB bo‘ladi.
@@ -98,9 +117,14 @@ To‘lov tizimi **hali ulanmagan**: to‘lovni o‘zingiz qabul qilib, admin pan
 **PIN nimani himoya qiladi:** bola profillarini yaratish/tahrirlash/o‘chirish, kunlik limitni o‘zgartirish, tarixni ko‘rish, PINni almashtirish.
 
 **Cheklovlar (bilib qo‘ying):**
-- Bola “Profil” sahifasida boshqa bola profiliga o‘ta oladi (masalan, katta aka-opa profiliga o‘tib o‘z limitini aylanib o‘tishi mumkin). Profil almashtirish hozircha PIN bilan himoyalanmagan.
+- Boshqa bola profiliga o‘tish PIN-kod so‘raydi (PIN yaqinda kiritilgan bo‘lsa, 15 daqiqa qayta so‘ralmaydi). Bu himoya brauzerda ishlaydi: kichik bolalar uchun yetarli, texnik bilimli o‘smirni to‘xtata olmaydi.
 - Admin paneli PIN bilan emas, faqat admin roli bilan himoyalangan: admin akkaunti ochiq turgan qurilmani bolaga bermang.
 - Bolaga qurilma berishdan oldin ota-ona bo‘limidan chiqib (“Qulflash”) qo‘ying.
+
+## Parolni tiklash
+
+- **Email orqali:** kirish oynasidagi “Parolni unutdingizmi?” havolasi. Supabase’ning o‘rnatilgan email xizmati cheklangan (faqat jamoa a’zolariga yuboradi va soatiga kam xat), shuning uchun haqiqiy foydalanuvchilarga xat yetishi uchun **Authentication → SMTP Settings** ga o‘z email xizmatingizni (Resend, Brevo va h.k.) ulang. Redirect URLs’da saytingiz manzili (`https://.../**`) bo‘lishi kerak.
+- **Administrator orqali (email kerak emas):** Admin panel → **Foydalanuvchilar** → “Parol” tugmasi vaqtinchalik parol o‘rnatadi. Parolni foydalanuvchiga o‘zingiz yetkazasiz.
 
 ## Maxfiylik (muhim)
 

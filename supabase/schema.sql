@@ -70,7 +70,13 @@ create table if not exists public.videos (
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
 );
+-- Format: 'long' — oddiy uzun video (16:9), 'short' — vertikal qisqa video (Shorts / Reels)
+alter table public.videos add column if not exists format text not null default 'long';
+alter table public.videos drop constraint if exists videos_format_check;
+alter table public.videos add constraint videos_format_check check (format in ('long', 'short'));
+
 create index if not exists videos_created_idx  on public.videos (created_at desc);
+create index if not exists videos_format_idx   on public.videos (format, created_at desc);
 create index if not exists videos_category_idx on public.videos (category_id);
 create index if not exists videos_channel_idx  on public.videos (channel_id);
 

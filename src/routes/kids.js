@@ -63,9 +63,12 @@ kids.post("/videos/:id/play", ...asChild, async (req, res) => {
   const signed = await supabase.storage.from("videos").createSignedUrl(video.video_path, 3600);
   if (signed.error) throw signed.error;
 
-  // 0 soniya bilan yozamiz: video tarixda darrov ko'rinadi
-  const rec = await supabase.rpc("record_watch", { p_child: req.child.id, p_video: video.id, p_day: today(), p_seconds: 0 });
-  if (rec.error) throw rec.error;
+  // 0 soniya bilan yozamiz: video tarixda darrov ko'rinadi.
+  // Shorts lentasi keyingi videoni oldindan yuklaydi (record=0): u hali ko'rilmagani uchun tarixga yozilmaydi.
+  if (req.query.record !== "0") {
+    const rec = await supabase.rpc("record_watch", { p_child: req.child.id, p_video: video.id, p_day: today(), p_seconds: 0 });
+    if (rec.error) throw rec.error;
+  }
 
   res.json({ url: signed.data.signedUrl, remaining_seconds: remaining(limit, used) });
 });

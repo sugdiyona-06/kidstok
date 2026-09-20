@@ -130,14 +130,22 @@
         </select>
       </div>
       <div class="field">
+        <label for="v-format">Format</label>
+        <select id="v-format">
+          <option value="long">Oddiy video (gorizontal, 16:9)</option>
+          <option value="short">Shorts (vertikal, 9:16)</option>
+        </select>
+        <span class="hint" id="v-format-hint"></span>
+      </div>
+      <div class="field">
         <label for="v-file">Video fayli</label>
         <input id="v-file" type="file" accept="video/mp4,video/webm">
-        <span class="hint" id="v-file-hint">MP4 yoki WebM, 1–3 daqiqa, 50 MB gacha.</span>
+        <span class="hint" id="v-file-hint">MP4 yoki WebM, 50 MB gacha.</span>
       </div>
       <div class="field">
         <label for="v-thumb">Muqova rasmi</label>
         <input id="v-thumb" type="file" accept="image/jpeg,image/png,image/webp">
-        <span class="hint">JPG, PNG yoki WebP, 5 MB gacha. Tavsiya: 16:9 nisbatda.</span>
+        <span class="hint" id="v-thumb-hint">JPG, PNG yoki WebP, 5 MB gacha.</span>
       </div>
       <label class="check"><input type="checkbox" id="v-published" checked> Saytda ko‘rsatish</label>
       <div class="form-actions">

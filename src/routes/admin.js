@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { Router } from "express";
 import { supabase } from "../db.js";
 import { requireAdmin, requireAuth } from "../auth.js";
-import { HttpError, int, isPro, isUuid, publicUrl, str } from "../util.js";
+import { HttpError, int, isNetworkError, isPro, isUuid, publicUrl, str } from "../util.js";
 
 export const admin = Router();
 admin.use(requireAuth, requireAdmin);
@@ -172,6 +172,10 @@ function cleanVideo(b = {}, creating) {
     is_published: b.is_published !== false,
     duration_seconds: b.duration_seconds === null || b.duration_seconds === undefined || b.duration_seconds === "" ? null : int(b.duration_seconds),
   };
+  if (b.format !== undefined && b.format !== null && b.format !== "") {
+    if (!["long", "short"].includes(b.format)) throw new HttpError(400, "Video formati noto'g'ri");
+    out.format = b.format;
+  }
   if (!out.title) throw new HttpError(400, "Sarlavha kiritilishi shart");
   if (!(out.min_age >= 2 && out.min_age <= 6)) throw new HttpError(400, "Yosh 2 dan 6 gacha bo'lishi kerak");
   if (out.duration_seconds !== null && !(out.duration_seconds >= 0)) throw new HttpError(400, "Davomiylik noto'g'ri");
@@ -270,4 +274,17 @@ admin.post("/users/:id/pro", async (req, res) => {
   const { error } = await supabase.from("profiles").update({ pro_until: proUntil }).eq("id", req.params.id);
   if (error) throw error;
   res.json({ pro_until: proUntil });
+});
+
+// Email yuborish sozlanmagan bo'lsa ham ishlaydi: admin foydalanuvchiga vaqtinchalik parol o'rnatib beradi
+admin.post("/users/:id/password", async (req, res) => {
+  if (!isUuid(req.params.id)) throw new HttpError(404, "Foydalanuvchi topilmadi");
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (password.length < 8 || password.length > 72) throw new HttpError(400, "Parol 8 dan 72 gacha belgidan iborat bo'lishi kerak");
+  const { error } = await supabase.auth.admin.updateUserById(req.params.id, { password });
+  if (error) {
+    if (isNetworkError(error)) throw error;
+    throw new HttpError(400, `Parolni o'rnatib bo'lmadi: ${error.message}`);
+  }
+  res.status(204).end();
 });

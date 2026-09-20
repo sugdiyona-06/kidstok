@@ -210,11 +210,13 @@ const ICON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 const ICONS = {
   home: `<svg ${ICON_ATTRS}><path d="M4 11.5 12 4.5l8 7V19a1.5 1.5 0 0 1-1.5 1.5H15v-5.5H9v5.5H5.5A1.5 1.5 0 0 1 4 19z"/></svg>`,
   search: `<svg ${ICON_ATTRS}><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>`,
+  shorts: `<svg ${ICON_ATTRS}><rect x="6.5" y="2.5" width="11" height="19" rx="3.5"/><path d="M10.5 9v6l4.5-3z"/></svg>`,
   profile: `<svg ${ICON_ATTRS}><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1-4 4-5.5 7.5-5.5s6.5 1.5 7.5 5.5"/></svg>`,
 };
 
 const NAV = [
   ["home", "/", "Asosiy"],
+  ["shorts", "/shorts", "Shorts"],
   ["search", "/search", "Qidiruv"],
   ["profile", "/profile", "Profil"],
 ];
@@ -263,7 +265,47 @@ export function avatarEl(key, className = "avatar") {
   return el("span", { class: className, "data-tone": String(index % 5), "aria-hidden": "true", text: AVATARS[key] ?? "🐻" });
 }
 
-/** "Kim tomosha qiladi?" tugmalari. Tanlangach sahifa qayta yuklanadi. */
+/**
+ * Ota-ona PIN-kodini so'raydi. Yaqinda kiritilgan bo'lsa (15 daqiqa), qayta so'ramaydi.
+ * Kiritilsa true, bekor qilinsa false qaytaradi.
+ */
+export function askPin(message = "Davom etish uchun ota-ona PIN-kodini kiriting.") {
+  return new Promise((resolve) => {
+    if (getParentToken()) return resolve(true);
+
+    let done = false;
+    const error = el("p", { class: "form-error", role: "alert", hidden: true });
+    const input = el("input", { class: "pin-input", type: "password", inputmode: "numeric", pattern: "[0-9]{4}", maxlength: "4", autocomplete: "off", required: true, "aria-label": "PIN-kod" });
+    const form = el(
+      "form",
+      {
+        onsubmit: async (event) => {
+          event.preventDefault();
+          error.hidden = true;
+          try {
+            const result = await api("/parent/unlock", { method: "POST", body: { pin: input.value } });
+            setParentToken(result.token, result.expires_in_ms);
+            done = true;
+            dialog.close();
+            resolve(true);
+          } catch (err) {
+            error.textContent = err.message;
+            error.hidden = false;
+            input.value = "";
+            input.focus();
+          }
+        },
+      },
+      el("div", { class: "field" }, input),
+      el("button", { class: "btn", type: "submit", text: "Davom etish" })
+    );
+    const dialog = openSheet("PIN-kod", el("p", { class: "muted", text: message }), error, form);
+    dialog.addEventListener("close", () => !done && resolve(false), { once: true });
+    input.focus();
+  });
+}
+
+/** "Kim tomosha qiladi?" tugmalari. Boshqa bola profiliga o'tish PIN-kod talab qiladi. */
 export function childPicker(children, activeId) {
   return children.map((child) =>
     el(
@@ -272,7 +314,9 @@ export function childPicker(children, activeId) {
         class: "kid",
         type: "button",
         "aria-pressed": String(child.id === activeId),
-        onclick: () => {
+        onclick: async () => {
+          const current = getChildId();
+          if (current && current !== child.id && !(await askPin("Boshqa profilga o'tish uchun ota-ona PIN-kodini kiriting."))) return;
           setChildId(child.id);
           location.reload();
         },
@@ -293,17 +337,19 @@ export function channelAvatar(channel, className = "chan") {
 }
 
 export function videoCard(video, { locked = false } = {}) {
+  const isShort = video.format === "short";
   const thumb = video.thumb_url
     ? el("img", { src: video.thumb_url, alt: "", loading: "lazy" })
     : el("span", { class: "thumb-fallback", "aria-hidden": "true", text: "▶" });
 
   return el(
     "a",
-    { class: "vcard", href: `/watch?id=${video.id}` },
+    { class: isShort ? "vcard vcard--short" : "vcard", href: isShort ? `/shorts?start=${video.id}` : `/watch?id=${video.id}` },
     el(
       "div",
       { class: "vcard__thumb" },
       thumb,
+      isShort ? el("span", { class: "vcard__tag", text: "Shorts" }) : null,
       video.duration_seconds ? el("span", { class: "vcard__time", text: formatDuration(video.duration_seconds) }) : null,
       locked ? el("span", { class: "vcard__lock", role: "img", "aria-label": "Pro obuna kerak", text: "🔒" }) : null
     ),
@@ -313,6 +359,22 @@ export function videoCard(video, { locked = false } = {}) {
       video.channel ? channelAvatar(video.channel, "chan chan--mini") : null,
       el("div", {}, el("h3", { text: video.title }), video.channel ? el("p", { text: video.channel.name }) : null)
     )
+  );
+}
+
+/** Shorts uchun tik (9:16) kartochka */
+export function shortCard(video, { locked = false } = {}) {
+  return el(
+    "a",
+    { class: "scard", href: `/shorts?start=${video.id}` },
+    el(
+      "div",
+      { class: "scard__thumb" },
+      video.thumb_url ? el("img", { src: video.thumb_url, alt: "", loading: "lazy" }) : el("span", { class: "thumb-fallback", "aria-hidden": "true", text: "▶" }),
+      video.duration_seconds ? el("span", { class: "vcard__time", text: formatDuration(video.duration_seconds) }) : null,
+      locked ? el("span", { class: "vcard__lock", role: "img", "aria-label": "Pro obuna kerak", text: "🔒" }) : null
+    ),
+    el("h3", { text: video.title })
   );
 }
 
@@ -331,6 +393,24 @@ export function renderVideos(container, videos, { locked = false, empty = "Hozir
   }
   container.classList.add("videos");
   container.replaceChildren(...videos.map((video) => videoCard(video, { locked })));
+}
+
+/** Aralash ro'yxat: uzun videolar to'r ko'rinishida, Shorts esa tik kartochkalar bilan */
+export function renderMixed(container, videos, { locked = false, empty = "Hozircha videolar yo'q", emptyText } = {}) {
+  container.classList.remove("videos");
+  if (!videos.length) {
+    container.replaceChildren(emptyBox(empty, emptyText));
+    return;
+  }
+  const longs = videos.filter((v) => v.format !== "short");
+  const shorts = videos.filter((v) => v.format === "short");
+  const parts = [];
+  if (longs.length) parts.push(el("div", { class: "videos" }, longs.map((v) => videoCard(v, { locked }))));
+  if (shorts.length) {
+    if (longs.length) parts.push(el("h2", { class: "sub-h", text: "Shorts" }));
+    parts.push(el("div", { class: "sgrid" }, shorts.map((v) => shortCard(v, { locked }))));
+  }
+  container.replaceChildren(...parts);
 }
 
 export function renderError(container, error) {
@@ -357,4 +437,134 @@ export function openSheet(title, ...content) {
   );
   if (!dialog.open) dialog.showModal();
   return dialog;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Ijro ro'yxatiga qo'shish oynasi (video va Shorts sahifalarida)      */
+/* ------------------------------------------------------------------ */
+export async function openPlaylistPicker(videoId) {
+  try {
+    showPicker(videoId, await api(`/child/playlists?video=${videoId}`));
+  } catch (error) {
+    toast(error.message, "error");
+  }
+}
+
+function showPicker(videoId, lists) {
+  const input = el("input", { type: "text", maxlength: "40", placeholder: "Yangi ro'yxat nomi", "aria-label": "Yangi ro'yxat nomi" });
+
+  const rows = lists.map((list) =>
+    el(
+      "li",
+      {},
+      el(
+        "button",
+        {
+          class: list.has_video ? "btn" : "btn btn--ghost",
+          type: "button",
+          "aria-pressed": String(list.has_video),
+          onclick: async () => {
+            try {
+              if (list.has_video) await api(`/child/playlists/${list.id}/items/${videoId}`, { method: "DELETE" });
+              else await api(`/child/playlists/${list.id}/items`, { method: "POST", body: { video_id: videoId } });
+              list.has_video = !list.has_video;
+              showPicker(videoId, lists);
+            } catch (error) {
+              toast(error.message, "error");
+            }
+          },
+        },
+        el("span", { text: list.name }),
+        el("span", { text: list.has_video ? "✓ Qo'shilgan" : "Qo'shish" })
+      )
+    )
+  );
+
+  const createForm = el(
+    "form",
+    {
+      class: "searchbar",
+      onsubmit: async (event) => {
+        event.preventDefault();
+        if (!input.value.trim()) return;
+        try {
+          const created = await api("/child/playlists", { method: "POST", body: { name: input.value } });
+          await api(`/child/playlists/${created.id}/items`, { method: "POST", body: { video_id: videoId } });
+          created.has_video = true;
+          showPicker(videoId, [created, ...lists]);
+          toast("Ro'yxat yaratildi");
+        } catch (error) {
+          toast(error.message, "error");
+        }
+      },
+    },
+    input,
+    el("button", { class: "btn", type: "submit", text: "Yaratish" })
+  );
+
+  openSheet("Ijro ro'yxatiga qo'shish", rows.length ? el("ul", { class: "pick-list" }, rows) : el("p", { class: "muted", text: "Hali ro'yxatlar yo'q. Birinchisini yarating." }), createForm);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tomosha vaqtini hisoblash (kunlik limit va ota-ona tarixi uchun)   */
+/*  Bitta kuzatuvchi istalgan <video> ga ulanadi (Shorts'da almashib turadi) */
+/* ------------------------------------------------------------------ */
+export function createWatchTracker({ onRemaining = () => {}, onLimit = () => {}, onProLost = () => {} } = {}) {
+  let videoEl = null;
+  let videoId = null;
+  let since = null;
+
+  async function send(id, seconds) {
+    try {
+      const result = await api("/watch/heartbeat", { method: "POST", body: { video_id: id, seconds }, keepalive: true });
+      onRemaining(result.remaining_seconds);
+      if (result.remaining_seconds === 0) onLimit();
+    } catch (error) {
+      if (error.code === "pro_required") onProLost();
+    }
+  }
+
+  function flush() {
+    if (since === null || !videoEl) return;
+    const now = Date.now();
+    let seconds = Math.round((now - since) / 1000);
+    since = videoEl.paused || videoEl.ended ? null : now;
+    const id = videoId;
+    while (seconds > 0) {
+      const chunk = Math.min(seconds, 30);
+      seconds -= chunk;
+      send(id, chunk);
+    }
+  }
+
+  const onPlay = () => {
+    since ??= Date.now();
+  };
+
+  function detach() {
+    if (!videoEl) return;
+    flush();
+    videoEl.removeEventListener("play", onPlay);
+    videoEl.removeEventListener("pause", flush);
+    videoEl.removeEventListener("ended", flush);
+    videoEl = null;
+    videoId = null;
+    since = null;
+  }
+
+  function attach(element, id) {
+    detach();
+    videoEl = element;
+    videoId = id;
+    since = !element.paused && !element.ended ? Date.now() : null;
+    element.addEventListener("play", onPlay);
+    element.addEventListener("pause", flush);
+    element.addEventListener("ended", flush);
+  }
+
+  document.addEventListener("visibilitychange", () => document.hidden && flush());
+  window.addEventListener("pagehide", flush);
+  setInterval(() => videoEl && !videoEl.paused && flush(), 15000);
+
+  return { attach, detach };
 }

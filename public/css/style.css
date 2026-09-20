@@ -289,6 +289,8 @@ a.kid, a.chip { text-decoration: none; }
 .block:last-child { padding-bottom: 4rem; }
 .block > h2, .section-head h2 { margin-bottom: 1.1rem; font-size: clamp(1.6rem, 3.5vw, 2.1rem); font-weight: 700; }
 .h-ico { margin-right: 0.4rem; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.1rem; }
+.section-head h2 { margin-bottom: 0; }
 
 /* Bo'limlar: katta rangli "nutq pufaklari" (bitta burchagi o'tkir) */
 .tiles {
@@ -741,3 +743,144 @@ td .hint { margin-top: 0.1rem; }
 }
 
 .form-actions + .hint { margin-top: 1rem; }
+
+/* =====================================================================
+   Shorts (vertikal lenta) va tik kartochkalar
+   ===================================================================== */
+.vcard--short .vcard__thumb img { object-fit: contain; background: var(--sky-soft); }
+.vcard__tag {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  padding: 0.1rem 0.7rem;
+  border-radius: 999px;
+  background: var(--grape);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+}
+.sub-h { margin: 2rem 0 1rem; font-size: 1.6rem; font-weight: 700; }
+
+.scard { display: block; color: inherit; text-decoration: none; }
+.scard__thumb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--grape-soft);
+  box-shadow: var(--sticker);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.scard__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.scard:hover .scard__thumb { box-shadow: 0 0 0 4px var(--primary), 0 8px 0 4px var(--primary-dark); }
+.scard:active .scard__thumb { transform: translateY(3px); }
+.scard h3 { margin-top: 0.7rem; font-size: 1.05rem; font-weight: 600; line-height: 1.2; }
+.scard .vcard__time { bottom: 0.6rem; right: 0.6rem; }
+
+.sgrid { display: grid; gap: 1.5rem 1rem; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.srail { display: flex; gap: 1rem; padding: 0.25rem 0.25rem 1rem; overflow-x: auto; scroll-snap-type: x proximity; }
+.srail .scard { flex: none; width: 168px; scroll-snap-align: start; }
+
+/* ---------- Shorts sahifasi ---------- */
+.shorts-main { display: grid; place-items: center; padding: 12px 0 16px; }
+.shorts-stage { position: relative; display: flex; align-items: center; gap: 1rem; }
+.feed {
+  position: relative;
+  height: calc(100dvh - 76px - 28px);
+  max-height: 900px;
+  aspect-ratio: 9 / 16;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  border-radius: var(--radius-xl);
+  background: #14203f;
+  box-shadow: 0 8px 0 rgb(26 35 71 / 0.18);
+}
+.feed::-webkit-scrollbar { display: none; }
+.feed:focus-visible { outline-offset: 4px; }
+
+.short { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; cursor: pointer; }
+.short video { display: block; width: 100%; height: 100%; object-fit: cover; background: #14203f; }
+.short::after { content: ""; position: absolute; inset: auto 0 0 0; height: 40%; background: linear-gradient(to top, rgb(10 16 40 / 0.75), transparent); pointer-events: none; }
+.short__pause {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  margin: auto;
+  width: 5.5rem;
+  height: 5.5rem;
+  padding-left: 0.3rem;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.9);
+  color: var(--primary);
+  font-size: 2.4rem;
+  pointer-events: none;
+}
+.short__actions {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 5.5rem;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.short__btn {
+  display: grid;
+  place-items: center;
+  width: 3.75rem;
+  height: 3.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.95);
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgb(26 35 71 / 0.25);
+}
+.short__btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgb(26 35 71 / 0.25); }
+.short__btn[aria-pressed="true"] { background: var(--sun); }
+.short__info { position: absolute; left: 1rem; right: 5.5rem; bottom: 1.5rem; z-index: 3; color: #fff; }
+.short__info h2 { font-size: 1.25rem; font-weight: 600; text-shadow: 0 2px 6px rgb(0 0 0 / 0.5); }
+.short__channel { display: inline-flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; color: #fff; font-family: var(--font-display); font-size: 1.05rem; text-decoration: none; text-shadow: 0 2px 6px rgb(0 0 0 / 0.5); }
+.short__bar { position: absolute; inset: auto 0 0 0; z-index: 3; height: 6px; background: rgb(255 255 255 / 0.3); }
+.short__bar i { display: block; width: 0; height: 100%; background: var(--sun); }
+
+.feed-nav { display: flex; flex-direction: column; gap: 0.75rem; }
+.feed-nav__btn {
+  width: 3.5rem;
+  height: 3.5rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--primary-dark);
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--primary-edge);
+}
+.feed-nav__btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--primary-edge); }
+
+.feed-overlay { position: absolute; inset: 0 auto 0 0; z-index: 10; display: grid; place-items: center; width: min(100%, calc((100dvh - 104px) * 9 / 16)); padding: 1rem; border-radius: var(--radius-xl); background: rgb(26 35 71 / 0.6); }
+.gate-card--page { margin-top: 1rem; }
+
+/* Telefon: lenta butun ekran, tepadagi panel yashiriladi */
+@media (max-width: 720px) {
+  /* Menyu shu panel ichida turgani uchun panelni yashirmaymiz: faqat past qilamiz (menyu ekran pastida qoladi) */
+  .page-shorts .site-header { position: static; min-height: 0; height: 0; background: none; box-shadow: none; }
+  .page-shorts .site-header .wrap { height: 0; }
+  .page-shorts .brand { display: none; }
+  .page-shorts { padding-bottom: 0; }
+  .shorts-main { padding: 0; place-items: start center; }
+  .shorts-stage { display: block; width: 100%; }
+  .feed { width: 100%; height: calc(100dvh - 92px); max-height: none; aspect-ratio: auto; border-radius: 0 0 var(--radius-lg) var(--radius-lg); box-shadow: none; }
+  .feed-nav { display: none; }
+  .feed-overlay { width: 100%; border-radius: 0; }
+  .short__actions { bottom: 4.5rem; }
+}
+@media (prefers-reduced-motion: reduce) { .feed { scroll-behavior: auto; } }

@@ -61,6 +61,7 @@ catalog.get("/channels/:id", softAuth, softChild, async (req, res) => {
 
 catalog.get("/videos", softAuth, softChild, async (req, res) => {
   const limit = clamp(Number(req.query.limit) || 24, 1, 60);
+  const offset = clamp(Number(req.query.offset) || 0, 0, 5000);
   const q = cleanQuery(req.query.q);
 
   let query = supabase
@@ -68,7 +69,10 @@ catalog.get("/videos", softAuth, softChild, async (req, res) => {
     .select(VIDEO_SELECT)
     .eq("is_published", true)
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .order("id", { ascending: false }) // bir xil vaqtli videolar tartibi barqaror bo'lishi uchun (sahifalash)
+    .range(offset, offset + limit - 1);
+
+  if (["long", "short"].includes(req.query.format)) query = query.eq("format", req.query.format);
 
   // Bola profili tanlangan bo'lsa, faqat uning yoshiga mos videolar ko'rsatiladi
   if (req.child) query = query.lte("min_age", req.child.age);
@@ -86,7 +90,27 @@ catalog.get("/videos", softAuth, softChild, async (req, res) => {
 
   const { data, error } = await query;
   if (error) throw error;
-  res.json(data.map(shapeVideo));
+  const result = data.map(shapeVideo);
+
+  // Bola tanlangan bo'lsa: qaysi videolar yoqtirilgan va qaysi kanallarga obuna bo'lingan (Shorts lentasi uchun)
+  if (req.child && result.length) {
+    const channelIds = [...new Set(result.map((v) => v.channel?.id).filter(Boolean))];
+    const [likes, follows] = await Promise.all([
+      supabase.from("likes").select("video_id").eq("child_id", req.child.id).in("video_id", result.map((v) => v.id)),
+      channelIds.length
+        ? supabase.from("channel_follows").select("channel_id").eq("child_id", req.child.id).in("channel_id", channelIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+    if (likes.error) throw likes.error;
+    if (follows.error) throw follows.error;
+    const liked = new Set(likes.data.map((l) => l.video_id));
+    const followed = new Set(follows.data.map((f) => f.channel_id));
+    for (const v of result) {
+      v.liked = liked.has(v.id);
+      v.following = v.channel ? followed.has(v.channel.id) : false;
+    }
+  }
+  res.json(result);
 });
 
 catalog.get("/videos/:id", softAuth, softChild, async (req, res) => {

@@ -77,11 +77,12 @@ async function uploadFile(kind, file) {
   return path;
 }
 
-function readDuration(file) {
+// Videoning davomiyligi va o'lchamini brauzerda o'qiymiz (tik video bo'lsa, Shorts deb taklif qilamiz)
+function readVideoInfo(file) {
   return new Promise((resolve) => {
     const probe = document.createElement("video");
     const url = URL.createObjectURL(file);
-    // Brauzer metama'lumotni o'qiy olmasa, cheksiz kutmaymiz (davomiylik ixtiyoriy)
+    // Brauzer metama'lumotni o'qiy olmasa, cheksiz kutmaymiz (bu ma'lumotlar ixtiyoriy)
     const timer = setTimeout(() => done(null), 5000);
     function done(value) {
       clearTimeout(timer);
@@ -89,7 +90,12 @@ function readDuration(file) {
       resolve(value);
     }
     probe.preload = "metadata";
-    probe.onloadedmetadata = () => done(Number.isFinite(probe.duration) ? Math.round(probe.duration) : null);
+    probe.onloadedmetadata = () =>
+      done({
+        duration: Number.isFinite(probe.duration) ? Math.round(probe.duration) : null,
+        width: probe.videoWidth || 0,
+        height: probe.videoHeight || 0,
+      });
     probe.onerror = () => done(null);
     probe.src = url;
   });
@@ -154,7 +160,7 @@ async function loadVideos() {
               "div",
               {},
               el("strong", { text: video.title }),
-              el("div", { class: "hint", text: [video.channel?.name, video.category?.name, video.duration_seconds ? formatDuration(video.duration_seconds) : null].filter(Boolean).join(" · ") })
+              el("div", { class: "hint", text: [video.format === "short" ? "⚡ Shorts" : "🎬 Video", video.channel?.name, video.category?.name, video.duration_seconds ? formatDuration(video.duration_seconds) : null].filter(Boolean).join(" · ") })
             )
           )
         ),
@@ -192,16 +198,40 @@ async function openVideoDialog(video = null) {
   $("#v-channel").value = video?.channel_id ?? "";
   $("#v-category").value = video?.category_id ?? "";
   $("#v-age").value = String(video?.min_age ?? 2);
+  $("#v-format").value = video?.format ?? "long";
+  updateFormatHints();
   $("#v-published").checked = video ? video.is_published : true;
   $("#v-file").value = "";
   $("#v-thumb").value = "";
   $("#v-file-hint").textContent = video
     ? "Yangi fayl tanlamasangiz, avvalgi video qoladi."
-    : "MP4 yoki WebM, 1–3 daqiqa, 50 MB gacha.";
+    : "MP4 yoki WebM, 50 MB gacha. Tik (vertikal) video tanlansa, format o'zi Shorts bo'ladi.";
   videoError.hidden = true;
   videoDialog.showModal();
   $("#v-title").focus();
 }
+
+function updateFormatHints() {
+  const short = $("#v-format").value === "short";
+  $("#v-thumb-hint").textContent = short
+    ? "JPG, PNG yoki WebP, 5 MB gacha. Shorts uchun tik (9:16) rasm tavsiya etiladi."
+    : "JPG, PNG yoki WebP, 5 MB gacha. Oddiy video uchun 16:9 rasm tavsiya etiladi.";
+  $("#v-format-hint").textContent = short
+    ? "Shorts: 60 soniyagacha, tik (9:16) video yaxshi ishlaydi. Alohida tik lentada ko'rsatiladi."
+    : "Oddiy video: 1–3 daqiqa, gorizontal (16:9). Video sahifasida ko'rsatiladi.";
+}
+$("#v-format").addEventListener("change", updateFormatHints);
+
+$("#v-file").addEventListener("change", async () => {
+  const file = $("#v-file").files[0];
+  if (!file) return;
+  const info = await readVideoInfo(file);
+  if (info?.width && info?.height) {
+    $("#v-format").value = info.height > info.width ? "short" : "long";
+    updateFormatHints();
+    $("#v-file-hint").textContent = `${info.width}×${info.height}${info.duration ? `, ${formatDuration(info.duration)}` : ""}: format "${info.height > info.width ? "Shorts" : "oddiy video"}" deb tanlandi (kerak bo'lsa, o'zgartiring).`;
+  }
+});
 
 $("#new-video").addEventListener("click", () => openVideoDialog());
 
@@ -225,7 +255,8 @@ $("#video-form").addEventListener("submit", async (event) => {
 
     if (file) {
       button.textContent = "Video yuklanmoqda...";
-      duration = await readDuration(file);
+      const info = await readVideoInfo(file);
+      duration = info?.duration ?? null;
       videoPath = await uploadFile("video", file);
     }
     if (thumb) {
@@ -240,6 +271,7 @@ $("#video-form").addEventListener("submit", async (event) => {
       channel_id: $("#v-channel").value || null,
       category_id: $("#v-category").value || null,
       min_age: Number($("#v-age").value),
+      format: $("#v-format").value,
       is_published: $("#v-published").checked,
       duration_seconds: duration,
       video_path: videoPath,
@@ -454,10 +486,21 @@ async function loadUsers() {
           " ",
           proSelect
         ),
-        el("td", {}, roleSelect)
+        el("td", {}, roleSelect, " ", el("button", { class: "btn btn--ghost btn--small", type: "button", text: "Parol", title: "Yangi parol o'rnatish", onclick: () => setPassword(user) }))
       );
     })
   );
+}
+
+async function setPassword(user) {
+  const password = prompt(`${user.email} uchun yangi parol (kamida 8 ta belgi).\nParolni foydalanuvchiga o'zingiz yetkazasiz:`);
+  if (!password) return;
+  try {
+    await api(`/admin/users/${user.id}/password`, { method: "POST", body: { password } });
+    toast("Parol o'rnatildi");
+  } catch (error) {
+    toast(error.message, "error");
+  }
 }
 
 boot().catch((error) => showGate(error.message, "Profilga o'tish", "/profile"));

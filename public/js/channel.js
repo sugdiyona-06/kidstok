@@ -1,4 +1,4 @@
-import { $, api, channelAvatar, el, emptyBox, loadContext, mountChrome, renderVideos, toast } from "./core.js";
+import { $, api, channelAvatar, el, emptyBox, loadContext, mountChrome, renderMixed, toast } from "./core.js";
 
 mountChrome("home");
 
@@ -37,7 +37,7 @@ try {
   }
 
   const videos = await api(`/videos?channel=${channel.id}&limit=60`);
-  renderVideos(list, videos, { locked: ctx.session ? !ctx.isPro : true, empty: "Bu kanalda hozircha video yo'q" });
+  renderMixed(list, videos, { locked: ctx.session ? !ctx.isPro : true, empty: "Bu kanalda hozircha video yo'q" });
 } catch (error) {
   list.classList.remove("videos");
   list.replaceChildren(emptyBox("Kanal topilmadi", error.message), el("p", {}, el("a", { class: "btn", href: "/", text: "Bosh sahifaga" })));

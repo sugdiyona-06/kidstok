@@ -41,7 +41,7 @@ app.use(
   })
 );
 app.use(express.json({ limit: "100kb" }));
-app.use("/api", rateLimit({ windowMs: 15 * 60 * 1000, limit: 600, standardHeaders: true, legacyHeaders: false }));
+app.use("/api", rateLimit({ windowMs: 15 * 60 * 1000, limit: 1200, standardHeaders: true, legacyHeaders: false }));
 
 /* ---------- API ---------- */
 app.use("/api/admin", admin);

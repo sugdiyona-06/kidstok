@@ -1,5 +1,5 @@
 import {
-  $, api, channelAvatar, childPicker, el, emptyBox, formatMinutes, loadContext, mountChrome, openSheet, renderVideos, toast,
+  $, api, channelAvatar, childPicker, createWatchTracker, el, emptyBox, formatMinutes, loadContext, mountChrome, openPlaylistPicker, renderVideos, toast,
 } from "./core.js";
 
 mountChrome("home");
@@ -48,46 +48,18 @@ function showRemaining(seconds) {
 /* ------------------------------------------------------------------ */
 /*  Tomosha vaqtini hisoblash (kunlik limit va ota-ona tarixi uchun)   */
 /* ------------------------------------------------------------------ */
-function trackWatching(videoEl) {
-  let since = null;
-
-  async function send(seconds) {
-    try {
-      const result = await api("/watch/heartbeat", { method: "POST", body: { video_id: video.id, seconds }, keepalive: true });
-      showRemaining(result.remaining_seconds);
-      if (result.remaining_seconds === 0) {
-        videoEl.pause();
-        showLimitReached();
-      }
-    } catch (error) {
-      if (error.code === "pro_required") {
-        videoEl.pause();
-        showGate({ emoji: "⭐", title: "Pro obuna muddati tugagan", actions: [link("/pro", "Pro haqida")] });
-      }
-    }
-  }
-
-  function flush() {
-    if (since === null) return;
-    const now = Date.now();
-    let seconds = Math.round((now - since) / 1000);
-    since = videoEl.paused || videoEl.ended ? null : now;
-    while (seconds > 0) {
-      const chunk = Math.min(seconds, 30);
-      seconds -= chunk;
-      send(chunk);
-    }
-  }
-
-  videoEl.addEventListener("play", () => {
-    since ??= Date.now();
-  });
-  videoEl.addEventListener("pause", flush);
-  videoEl.addEventListener("ended", flush);
-  document.addEventListener("visibilitychange", () => document.hidden && flush());
-  window.addEventListener("pagehide", flush);
-  setInterval(() => !videoEl.paused && flush(), 15000);
-}
+let currentVideoEl = null;
+const tracker = createWatchTracker({
+  onRemaining: showRemaining,
+  onLimit: () => {
+    currentVideoEl?.pause();
+    showLimitReached();
+  },
+  onProLost: () => {
+    currentVideoEl?.pause();
+    showGate({ emoji: "⭐", title: "Pro obuna muddati tugagan", actions: [link("/pro", "Pro haqida")] });
+  },
+});
 
 async function startPlayback() {
   try {
@@ -102,7 +74,8 @@ async function startPlayback() {
     });
     player.replaceChildren(videoEl);
     showRemaining(play.remaining_seconds);
-    trackWatching(videoEl);
+    currentVideoEl = videoEl;
+    tracker.attach(videoEl, video.id);
   } catch (error) {
     if (error.code === "limit_reached") return showLimitReached();
     if (error.code === "pro_required") return showGate({ emoji: "⭐", title: "Bu video Pro obuna bilan ochiladi", actions: [link("/pro", "Pro haqida")] });
@@ -159,70 +132,7 @@ function renderActions() {
     box.append(followBtn);
   }
 
-  box.append(el("button", { class: "btn btn--ghost", type: "button", onclick: openPlaylistPicker, text: "➕ Ro'yxatga" }));
-}
-
-async function openPlaylistPicker() {
-  try {
-    showPicker(await api(`/child/playlists?video=${video.id}`));
-  } catch (error) {
-    toast(error.message, "error");
-  }
-}
-
-function showPicker(lists) {
-  const input = el("input", { type: "text", maxlength: "40", placeholder: "Yangi ro'yxat nomi", "aria-label": "Yangi ro'yxat nomi" });
-
-  const rows = lists.map((list) =>
-    el(
-      "li",
-      {},
-      el(
-        "button",
-        {
-          class: list.has_video ? "btn" : "btn btn--ghost",
-          type: "button",
-          "aria-pressed": String(list.has_video),
-          onclick: async () => {
-            try {
-              if (list.has_video) await api(`/child/playlists/${list.id}/items/${video.id}`, { method: "DELETE" });
-              else await api(`/child/playlists/${list.id}/items`, { method: "POST", body: { video_id: video.id } });
-              list.has_video = !list.has_video;
-              showPicker(lists);
-            } catch (error) {
-              toast(error.message, "error");
-            }
-          },
-        },
-        el("span", { text: list.name }),
-        el("span", { text: list.has_video ? "✓ Qo'shilgan" : "Qo'shish" })
-      )
-    )
-  );
-
-  const createForm = el(
-    "form",
-    {
-      class: "searchbar",
-      onsubmit: async (event) => {
-        event.preventDefault();
-        if (!input.value.trim()) return;
-        try {
-          const created = await api("/child/playlists", { method: "POST", body: { name: input.value } });
-          await api(`/child/playlists/${created.id}/items`, { method: "POST", body: { video_id: video.id } });
-          created.has_video = true;
-          showPicker([created, ...lists]);
-          toast("Ro'yxat yaratildi");
-        } catch (error) {
-          toast(error.message, "error");
-        }
-      },
-    },
-    input,
-    el("button", { class: "btn", type: "submit", text: "Yaratish" })
-  );
-
-  openSheet("Ijro ro'yxatiga qo'shish", rows.length ? el("ul", { class: "pick-list" }, rows) : el("p", { class: "muted", text: "Hali ro'yxatlar yo'q. Birinchisini yarating." }), createForm);
+  box.append(el("button", { class: "btn btn--ghost", type: "button", onclick: () => openPlaylistPicker(video.id), text: "➕ Ro'yxatga" }));
 }
 
 /* ------------------------------------------------------------------ */
@@ -231,9 +141,9 @@ function showPicker(lists) {
 async function loadSuggestions() {
   const more = $("#more");
   try {
-    let list = video.category_id ? await api(`/videos?category=${video.category_id}&limit=8`) : [];
+    let list = video.category_id ? await api(`/videos?format=long&category=${video.category_id}&limit=8`) : [];
     list = list.filter((v) => v.id !== video.id);
-    if (list.length < 2) list = (await api("/videos?limit=8")).filter((v) => v.id !== video.id);
+    if (list.length < 2) list = (await api("/videos?format=long&limit=8")).filter((v) => v.id !== video.id);
     renderVideos(more, list.slice(0, 6), { locked: !ctx.isPro, empty: "Boshqa videolar yo'q" });
   } catch {
     more.replaceChildren();
@@ -247,6 +157,12 @@ async function main() {
     const box = $("#watch-error");
     box.hidden = false;
     box.replaceChildren(el("div", { class: "block" }, emptyBox("Video topilmadi", error.message), el("p", {}, el("a", { class: "btn", href: "/", text: "Bosh sahifaga" }))));
+    return;
+  }
+
+  // Shorts videolar tik lentada ko'riladi
+  if (video.format === "short") {
+    location.replace(`/shorts?start=${video.id}`);
     return;
   }
 

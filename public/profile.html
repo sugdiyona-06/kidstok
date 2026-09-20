@@ -37,6 +37,19 @@
             <input id="login-password" name="password" type="password" autocomplete="current-password" required>
           </div>
           <button class="btn" type="submit">Kirish</button>
+          <p class="hint"><a href="#" id="forgot-link">Parolni unutdingizmi?</a></p>
+        </form>
+
+        <form id="forgot-form" hidden>
+          <p class="muted">Email manzilingizni yozing, parolni yangilash havolasini yuboramiz.</p>
+          <div class="field">
+            <label for="forgot-email">Email</label>
+            <input id="forgot-email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="form-actions">
+            <button class="btn" type="submit">Havolani yuborish</button>
+            <button class="btn btn--ghost" type="button" id="forgot-cancel">Orqaga</button>
+          </div>
         </form>
 
         <form id="register-form" role="tabpanel" aria-labelledby="tab-register" hidden>

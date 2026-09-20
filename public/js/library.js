@@ -1,4 +1,4 @@
-import { $, api, childPicker, el, emptyBox, loadContext, mountChrome, renderError, renderVideos, toast, videoCard, channelBubble } from "./core.js";
+import { $, api, childPicker, el, emptyBox, loadContext, mountChrome, renderError, renderMixed, toast, videoCard, channelBubble } from "./core.js";
 
 mountChrome("profile");
 
@@ -31,11 +31,11 @@ function needChild() {
 
 /* ---------- Bo'limlar ---------- */
 async function showLikes() {
-  renderVideos(content, await api("/child/likes"), { locked, empty: "Hali yoqtirilgan videolar yo'q", emptyText: "Video sahifasida ❤️ tugmasini bosing." });
+  renderMixed(content, await api("/child/likes"), { locked, empty: "Hali yoqtirilgan videolar yo'q", emptyText: "Video sahifasida ❤️ tugmasini bosing." });
 }
 
 async function showHistory() {
-  renderVideos(content, await api("/child/history?limit=50"), { locked, empty: "Hali hech narsa ko'rilmagan" });
+  renderMixed(content, await api("/child/history?limit=50"), { locked, empty: "Hali hech narsa ko'rilmagan" });
 }
 
 async function showFollows() {
@@ -45,7 +45,7 @@ async function showFollows() {
     return;
   }
   const grid = el("div");
-  renderVideos(grid, videos, { locked, empty: "Obuna bo'lingan kanallarda hozircha video yo'q" });
+  renderMixed(grid, videos, { locked, empty: "Obuna bo'lingan kanallarda hozircha video yo'q" });
   content.replaceChildren(el("div", { class: "bubbles" }, channels.map(channelBubble)), el("h2", { text: "Yangi videolar" }), el("br"), grid);
 }
 

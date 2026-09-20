@@ -3,7 +3,7 @@ import { HttpError, isUuid, publicUrl } from "./util.js";
 
 // Ro'yxatlar uchun kerakli ustunlar (video fayl yo'li bu yerda YO'Q — u faqat /play orqali beriladi)
 export const VIDEO_SELECT =
-  "id, title, description, duration_seconds, min_age, is_published, thumb_path, created_at, category_id, channel:channels(id, name, avatar_path)";
+  "id, title, description, format, duration_seconds, min_age, is_published, thumb_path, created_at, category_id, channel:channels(id, name, avatar_path)";
 
 export const shapeChannel = (c) => ({
   id: c.id,
@@ -17,6 +17,7 @@ export function shapeVideo(v) {
     id: v.id,
     title: v.title,
     description: v.description,
+    format: v.format,
     duration_seconds: v.duration_seconds,
     min_age: v.min_age,
     thumb_url: publicUrl(v.thumb_path),

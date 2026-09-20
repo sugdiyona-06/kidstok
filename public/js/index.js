@@ -1,4 +1,4 @@
-import { $, api, avatarEl, channelBubble, childPicker, el, loadContext, mountChrome, renderError, renderVideos } from "./core.js";
+import { $, api, avatarEl, channelBubble, childPicker, el, loadContext, mountChrome, renderError, renderMixed, renderVideos, shortCard } from "./core.js";
 
 mountChrome("home");
 
@@ -33,7 +33,17 @@ if (!ctx.session) {
 const latest = $("#latest");
 
 try {
-  const [categories, channels, videos] = await Promise.all([api("/categories"), api("/channels"), api("/videos?limit=12")]);
+  const [categories, channels, videos, shorts] = await Promise.all([
+    api("/categories"),
+    api("/channels"),
+    api("/videos?format=long&limit=12"),
+    api("/videos?format=short&limit=10"),
+  ]);
+
+  if (shorts.length) {
+    $("#shorts-block").hidden = false;
+    $("#shorts-rail").replaceChildren(...shorts.map((v) => shortCard(v, { locked })));
+  }
 
   if (categories.length) {
     $("#cats-block").hidden = false;
@@ -56,7 +66,7 @@ try {
     const recent = await api("/child/history?limit=6");
     if (recent.length) {
       $("#recent-block").hidden = false;
-      renderVideos($("#recent"), recent, { locked });
+      renderMixed($("#recent"), recent, { locked });
     }
   }
 } catch (error) {
