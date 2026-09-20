@@ -13,19 +13,23 @@
   <header class="site-header" id="site-header"></header>
 
   <main>
-    <div class="narrow">
-      <div class="panel">
+    <div class="mid">
+      <div class="panel" data-peek="orange">
         <h1>Nurchashma Pro</h1>
         <p class="muted">Videolarni tomosha qilish uchun ota-ona akkauntida Pro obuna faol bo‘lishi kerak. Obuna oilangizdagi barcha bola profillari uchun amal qiladi.</p>
         <ul class="plan-list">
-          <li>Barcha multfilmlar, ertaklar, ta’limiy videolar va qo‘shiqlar</li>
+          <li>Barcha multfilmlar, ertaklar, ta’limiy videolar, qo‘shiqlar va Shorts</li>
           <li>Reklamasiz va izohlarsiz — bolalar uchun xavfsiz muhit</li>
           <li>Yosh bo‘yicha saralash, kunlik vaqt limiti va PIN-kod</li>
           <li>Har bir bola uchun alohida tarix, yoqtirganlar va ijro ro‘yxatlari</li>
         </ul>
-        <p class="form-note" id="pro-status" hidden></p>
-        <div class="form-actions" id="pro-actions"></div>
+        <p class="form-note" id="pro-status" role="status" hidden></p>
       </div>
+
+      <p class="form-error" id="pay-error" role="alert" hidden></p>
+      <div class="plans" id="plans"></div>
+      <div class="form-actions" id="pro-actions"></div>
+      <p class="hint" id="pro-hint" hidden></p>
     </div>
   </main>
 

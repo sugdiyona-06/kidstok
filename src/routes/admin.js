@@ -172,10 +172,8 @@ function cleanVideo(b = {}, creating) {
     is_published: b.is_published !== false,
     duration_seconds: b.duration_seconds === null || b.duration_seconds === undefined || b.duration_seconds === "" ? null : int(b.duration_seconds),
   };
-  if (b.format !== undefined && b.format !== null && b.format !== "") {
-    if (!["long", "short"].includes(b.format)) throw new HttpError(400, "Video formati noto'g'ri");
-    out.format = b.format;
-  }
+  // Sayt faqat tik (9:16) qisqa videolar bilan ishlaydi: format doim 'short'
+  out.format = "short";
   if (!out.title) throw new HttpError(400, "Sarlavha kiritilishi shart");
   if (!(out.min_age >= 2 && out.min_age <= 6)) throw new HttpError(400, "Yosh 2 dan 6 gacha bo'lishi kerak");
   if (out.duration_seconds !== null && !(out.duration_seconds >= 0)) throw new HttpError(400, "Davomiylik noto'g'ri");
@@ -287,4 +285,29 @@ admin.post("/users/:id/password", async (req, res) => {
     throw new HttpError(400, `Parolni o'rnatib bo'lmadi: ${error.message}`);
   }
   res.status(204).end();
+});
+
+/* ------------------------------------------------------------------ */
+/*  To'lovlar                                                          */
+/* ------------------------------------------------------------------ */
+admin.get("/payments", async (_req, res) => {
+  const { data, error } = await supabase
+    .from("payments")
+    .select("id, provider, state, amount_tiyin, create_time, perform_time, order:orders(plan_days, amount_uzs, status, parent:profiles(email, full_name))")
+    .order("create_time", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  res.json(
+    data.map((p) => ({
+      id: p.id,
+      provider: p.provider,
+      state: p.state,
+      amount_uzs: Math.round(p.amount_tiyin / 100),
+      create_time: p.create_time,
+      perform_time: p.perform_time,
+      plan_days: p.order?.plan_days ?? null,
+      email: p.order?.parent?.email ?? null,
+      name: p.order?.parent?.full_name ?? null,
+    }))
+  );
 });

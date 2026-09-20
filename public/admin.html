@@ -29,6 +29,7 @@
         <button type="button" role="tab" data-tab="channels" aria-selected="false">Kanallar</button>
         <button type="button" role="tab" data-tab="categories" aria-selected="false">Bo‘limlar</button>
         <button type="button" role="tab" data-tab="users" aria-selected="false">Foydalanuvchilar</button>
+        <button type="button" role="tab" data-tab="payments" aria-selected="false">To‘lovlar</button>
       </div>
 
       <div>
@@ -94,7 +95,19 @@
               <tbody id="users-body"></tbody>
             </table>
           </div>
-          <p class="hint">Pro obunani to‘lov qabul qilgach shu yerdan qo‘lda faollashtirasiz. Muddat amaldagi obuna tugagach davom etadi.</p>
+          <p class="hint">Payme/Click orqali to‘lov avtomatik hisoblanadi. Boshqa yo‘l bilan to‘lov qabul qilsangiz, Pro obunani shu yerdan qo‘lda faollashtirasiz. Muddat amaldagi obuna tugagach davom etadi.</p>
+        </section>
+
+        <!-- To'lovlar -->
+        <section id="tab-payments" role="tabpanel" hidden>
+          <div class="toolbar"><h1>To‘lovlar</h1></div>
+          <div class="table-wrap" id="payments-wrap">
+            <table>
+              <thead><tr><th>Sana</th><th>Ota-ona</th><th>Usul</th><th>Summa</th><th>Holati</th></tr></thead>
+              <tbody id="payments-body"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="payments-empty" hidden><strong>Hali to‘lov yo‘q</strong><span>Payme yoki Click orqali kelgan to‘lovlar shu yerda ko‘rinadi.</span></div>
         </section>
       </div>
     </div>
@@ -130,22 +143,14 @@
         </select>
       </div>
       <div class="field">
-        <label for="v-format">Format</label>
-        <select id="v-format">
-          <option value="long">Oddiy video (gorizontal, 16:9)</option>
-          <option value="short">Shorts (vertikal, 9:16)</option>
-        </select>
-        <span class="hint" id="v-format-hint"></span>
-      </div>
-      <div class="field">
         <label for="v-file">Video fayli</label>
         <input id="v-file" type="file" accept="video/mp4,video/webm">
-        <span class="hint" id="v-file-hint">MP4 yoki WebM, 50 MB gacha.</span>
+        <span class="hint" id="v-file-hint">Tik (vertikal, 9:16) video, MP4 yoki WebM, 50 MB gacha. 15–90 soniya tavsiya etiladi.</span>
       </div>
       <div class="field">
         <label for="v-thumb">Muqova rasmi</label>
         <input id="v-thumb" type="file" accept="image/jpeg,image/png,image/webp">
-        <span class="hint" id="v-thumb-hint">JPG, PNG yoki WebP, 5 MB gacha.</span>
+        <span class="hint" id="v-thumb-hint">Tik (9:16) rasm, JPG, PNG yoki WebP, 5 MB gacha.</span>
       </div>
       <label class="check"><input type="checkbox" id="v-published" checked> Saytda ko‘rsatish</label>
       <div class="form-actions">

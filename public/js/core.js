@@ -1,5 +1,9 @@
 /* Nurchashma — barcha sahifalar uchun umumiy yordamchilar */
 
+import { CAT_LOGO, catSleep, mountCats } from "./cats.js";
+
+export { mountCats };
+
 export const $ = (selector, root = document) => root.querySelector(selector);
 
 /** Xavfsiz DOM yaratish (innerHTML ishlatilmaydi, shuning uchun XSS bo'lmaydi). */
@@ -203,8 +207,7 @@ export function resetContext() {
 /* ------------------------------------------------------------------ */
 /*  Navbar va footer (barcha sahifalarda bir xil)                      */
 /* ------------------------------------------------------------------ */
-const LOGO =
-  '<svg width="40" height="40" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="10" fill="#3E6BF4"/><path d="M12.5 10v12l10-6z" fill="#fff" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><circle cx="25" cy="7" r="3.2" fill="#FFCF4A"/></svg>';
+const LOGO = CAT_LOGO;
 
 const ICON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
 const ICONS = {
@@ -249,6 +252,8 @@ export function mountChrome(active) {
       if (ctx.child) $('[data-nav="profile"] .nav__ico')?.replaceChildren(avatarEl(ctx.child.avatar, "avatar avatar--mini"));
     })
     .catch(() => {});
+
+  mountCats();
 }
 
 /* ------------------------------------------------------------------ */
@@ -336,31 +341,8 @@ export function channelAvatar(channel, className = "chan") {
     : el("span", { class: className, "aria-hidden": "true", text: channel.name.charAt(0).toUpperCase() });
 }
 
-export function videoCard(video, { locked = false } = {}) {
-  const isShort = video.format === "short";
-  const thumb = video.thumb_url
-    ? el("img", { src: video.thumb_url, alt: "", loading: "lazy" })
-    : el("span", { class: "thumb-fallback", "aria-hidden": "true", text: "▶" });
-
-  return el(
-    "a",
-    { class: isShort ? "vcard vcard--short" : "vcard", href: isShort ? `/shorts?start=${video.id}` : `/watch?id=${video.id}` },
-    el(
-      "div",
-      { class: "vcard__thumb" },
-      thumb,
-      isShort ? el("span", { class: "vcard__tag", text: "Shorts" }) : null,
-      video.duration_seconds ? el("span", { class: "vcard__time", text: formatDuration(video.duration_seconds) }) : null,
-      locked ? el("span", { class: "vcard__lock", role: "img", "aria-label": "Pro obuna kerak", text: "🔒" }) : null
-    ),
-    el(
-      "div",
-      { class: "vcard__meta" },
-      video.channel ? channelAvatar(video.channel, "chan chan--mini") : null,
-      el("div", {}, el("h3", { text: video.title }), video.channel ? el("p", { text: video.channel.name }) : null)
-    )
-  );
-}
+/** Barcha videolar tik (9:16): oddiy kartochka ham shu ko'rinishda */
+export const videoCard = (video, options) => shortCard(video, options);
 
 /** Shorts uchun tik (9:16) kartochka */
 export function shortCard(video, { locked = false } = {}) {
@@ -374,7 +356,8 @@ export function shortCard(video, { locked = false } = {}) {
       video.duration_seconds ? el("span", { class: "vcard__time", text: formatDuration(video.duration_seconds) }) : null,
       locked ? el("span", { class: "vcard__lock", role: "img", "aria-label": "Pro obuna kerak", text: "🔒" }) : null
     ),
-    el("h3", { text: video.title })
+    el("h3", { text: video.title }),
+    video.channel ? el("p", { class: "scard__by", text: video.channel.name }) : null
   );
 }
 
@@ -382,36 +365,25 @@ export function channelBubble(channel) {
   return el("a", { class: "bubble", href: `/channel?id=${channel.id}` }, channelAvatar(channel, "chan"), el("span", { text: channel.name }));
 }
 
-export const emptyBox = (title, text) =>
-  el("div", { class: "empty" }, el("strong", { text: title }), text ? el("span", { text }) : null);
+export function emptyBox(title, text) {
+  const cat = el("span", { class: "empty__cat", "aria-hidden": "true" });
+  cat.insertAdjacentHTML("afterbegin", catSleep("orange"));
+  return el("div", { class: "empty" }, cat, el("strong", { text: title }), text ? el("span", { text }) : null);
+}
 
 export function renderVideos(container, videos, { locked = false, empty = "Hozircha videolar yo'q", emptyText } = {}) {
-  if (!videos.length) {
-    container.classList.remove("videos");
-    container.replaceChildren(emptyBox(empty, emptyText));
-    return;
-  }
-  container.classList.add("videos");
-  container.replaceChildren(...videos.map((video) => videoCard(video, { locked })));
-}
-
-/** Aralash ro'yxat: uzun videolar to'r ko'rinishida, Shorts esa tik kartochkalar bilan */
-export function renderMixed(container, videos, { locked = false, empty = "Hozircha videolar yo'q", emptyText } = {}) {
   container.classList.remove("videos");
   if (!videos.length) {
+    container.classList.remove("sgrid");
     container.replaceChildren(emptyBox(empty, emptyText));
     return;
   }
-  const longs = videos.filter((v) => v.format !== "short");
-  const shorts = videos.filter((v) => v.format === "short");
-  const parts = [];
-  if (longs.length) parts.push(el("div", { class: "videos" }, longs.map((v) => videoCard(v, { locked }))));
-  if (shorts.length) {
-    if (longs.length) parts.push(el("h2", { class: "sub-h", text: "Shorts" }));
-    parts.push(el("div", { class: "sgrid" }, shorts.map((v) => shortCard(v, { locked }))));
-  }
-  container.replaceChildren(...parts);
+  container.classList.add("sgrid");
+  container.replaceChildren(...videos.map((video) => shortCard(video, { locked })));
 }
+
+// Eski nom: endi hamma videolar bir xil (tik) ko'rinishda
+export const renderMixed = renderVideos;
 
 export function renderError(container, error) {
   container.classList.remove("videos");

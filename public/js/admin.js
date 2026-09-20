@@ -1,5 +1,5 @@
 import {
-  $, api, channelAvatar, el, formatDate, formatDuration, getSession, getSupabase, loadContext, mountChrome, toast,
+  $, api, channelAvatar, el, formatDate, formatDateTime, formatDuration, getSession, getSupabase, loadContext, mountChrome, toast,
 } from "./core.js";
 
 mountChrome("profile");
@@ -38,7 +38,7 @@ async function boot() {
 /* ------------------------------------------------------------------ */
 /*  Bo'limlar                                                          */
 /* ------------------------------------------------------------------ */
-const loaders = { overview: loadOverview, videos: loadVideos, channels: loadChannels, categories: loadCategories, users: loadUsers };
+const loaders = { overview: loadOverview, videos: loadVideos, channels: loadChannels, categories: loadCategories, users: loadUsers, payments: loadPayments };
 
 function openTab(name) {
   for (const button of tabButtons) {
@@ -160,7 +160,7 @@ async function loadVideos() {
               "div",
               {},
               el("strong", { text: video.title }),
-              el("div", { class: "hint", text: [video.format === "short" ? "⚡ Shorts" : "🎬 Video", video.channel?.name, video.category?.name, video.duration_seconds ? formatDuration(video.duration_seconds) : null].filter(Boolean).join(" · ") })
+              el("div", { class: "hint", text: [video.channel?.name, video.category?.name, video.duration_seconds ? formatDuration(video.duration_seconds) : null].filter(Boolean).join(" · ") })
             )
           )
         ),
@@ -198,39 +198,30 @@ async function openVideoDialog(video = null) {
   $("#v-channel").value = video?.channel_id ?? "";
   $("#v-category").value = video?.category_id ?? "";
   $("#v-age").value = String(video?.min_age ?? 2);
-  $("#v-format").value = video?.format ?? "long";
-  updateFormatHints();
   $("#v-published").checked = video ? video.is_published : true;
   $("#v-file").value = "";
   $("#v-thumb").value = "";
   $("#v-file-hint").textContent = video
     ? "Yangi fayl tanlamasangiz, avvalgi video qoladi."
-    : "MP4 yoki WebM, 50 MB gacha. Tik (vertikal) video tanlansa, format o'zi Shorts bo'ladi.";
+    : FILE_HINT;
   videoError.hidden = true;
   videoDialog.showModal();
   $("#v-title").focus();
 }
 
-function updateFormatHints() {
-  const short = $("#v-format").value === "short";
-  $("#v-thumb-hint").textContent = short
-    ? "JPG, PNG yoki WebP, 5 MB gacha. Shorts uchun tik (9:16) rasm tavsiya etiladi."
-    : "JPG, PNG yoki WebP, 5 MB gacha. Oddiy video uchun 16:9 rasm tavsiya etiladi.";
-  $("#v-format-hint").textContent = short
-    ? "Shorts: 60 soniyagacha, tik (9:16) video yaxshi ishlaydi. Alohida tik lentada ko'rsatiladi."
-    : "Oddiy video: 1–3 daqiqa, gorizontal (16:9). Video sahifasida ko'rsatiladi.";
-}
-$("#v-format").addEventListener("change", updateFormatHints);
+const FILE_HINT = "Tik (vertikal, 9:16) video, MP4 yoki WebM, 50 MB gacha. 15–90 soniya tavsiya etiladi.";
 
 $("#v-file").addEventListener("change", async () => {
+  const hint = $("#v-file-hint");
   const file = $("#v-file").files[0];
-  if (!file) return;
+  if (!file) return void (hint.textContent = FILE_HINT);
   const info = await readVideoInfo(file);
-  if (info?.width && info?.height) {
-    $("#v-format").value = info.height > info.width ? "short" : "long";
-    updateFormatHints();
-    $("#v-file-hint").textContent = `${info.width}×${info.height}${info.duration ? `, ${formatDuration(info.duration)}` : ""}: format "${info.height > info.width ? "Shorts" : "oddiy video"}" deb tanlandi (kerak bo'lsa, o'zgartiring).`;
-  }
+  if (!info?.width || !info?.height) return;
+  const size = `${info.width}×${info.height}${info.duration ? `, ${formatDuration(info.duration)}` : ""}`;
+  hint.textContent =
+    info.height > info.width
+      ? `${size}: tik video, yaxshi.`
+      : `${size}: bu video gorizontal! Sayt tik (9:16) videolar uchun mo'ljallangan, gorizontal video kichik ko'rinadi. Tik video yuklashni tavsiya qilamiz.`;
 });
 
 $("#new-video").addEventListener("click", () => openVideoDialog());
@@ -271,7 +262,6 @@ $("#video-form").addEventListener("submit", async (event) => {
       channel_id: $("#v-channel").value || null,
       category_id: $("#v-category").value || null,
       min_age: Number($("#v-age").value),
-      format: $("#v-format").value,
       is_published: $("#v-published").checked,
       duration_seconds: duration,
       video_path: videoPath,
@@ -501,6 +491,31 @@ async function setPassword(user) {
   } catch (error) {
     toast(error.message, "error");
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  To'lovlar                                                          */
+/* ------------------------------------------------------------------ */
+const PAYMENT_STATES = { 1: ["Kutilmoqda", "badge badge--draft"], 2: ["To'langan", "badge"], "-1": ["Bekor qilingan", "badge badge--off"], "-2": ["Qaytarilgan", "badge badge--off"] };
+
+async function loadPayments() {
+  const rows = await api("/admin/payments");
+  $("#payments-wrap").hidden = !rows.length;
+  $("#payments-empty").hidden = rows.length > 0;
+  $("#payments-body").replaceChildren(
+    ...rows.map((p) => {
+      const [label, cls] = PAYMENT_STATES[String(p.state)] ?? ["?", "badge"];
+      return el(
+        "tr",
+        {},
+        el("td", { text: formatDateTime(new Date(Number(p.create_time)).toISOString()) }),
+        el("td", {}, el("strong", { text: p.name || "—" }), el("div", { class: "hint", text: p.email ?? "" })),
+        el("td", { text: p.provider === "payme" ? "Payme" : "Click" }),
+        el("td", { text: `${p.amount_uzs.toLocaleString("en-US").replace(/,/g, " ")} so'm${p.plan_days ? ` · ${p.plan_days} kun` : ""}` }),
+        el("td", {}, el("span", { class: cls, text: label }))
+      );
+    })
+  );
 }
 
 boot().catch((error) => showGate(error.message, "Profilga o'tish", "/profile"));

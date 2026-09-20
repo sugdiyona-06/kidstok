@@ -10,6 +10,8 @@ if (missing.length) {
   process.exit(1);
 }
 
+const posInt = (v, fallback) => (Number.isInteger(Number(v)) && Number(v) > 0 ? Number(v) : fallback);
+
 function fail(message) {
   console.error(`Xato: ${message}`);
   process.exit(1);
@@ -41,6 +43,16 @@ export const config = {
   isProd: env.NODE_ENV === "production",
   // Pro obunani qayerdan sotib olish mumkinligi (masalan Telegram havolasi). Ixtiyoriy.
   proContactUrl: env.PRO_CONTACT_URL ?? "",
+  // Obuna narxlari (so'mda). Render'da PRICE_30 / PRICE_90 / PRICE_365 bilan o'zgartiring
+  prices: { 30: posInt(env.PRICE_30, 29000), 90: posInt(env.PRICE_90, 79000), 365: posInt(env.PRICE_365, 249000) },
+  // Sayt manzili (to'lovdan keyin qaytish uchun). Bo'sh bo'lsa, so'rovdan olinadi
+  siteUrl: (env.SITE_URL ?? "").trim().replace(/\/+$/, ""),
+  payme: { merchantId: (env.PAYME_MERCHANT_ID ?? "").trim(), key: (env.PAYME_KEY ?? "").trim(), test: env.PAYME_TEST === "true" },
+  click: {
+    serviceId: (env.CLICK_SERVICE_ID ?? "").trim(),
+    merchantId: (env.CLICK_MERCHANT_ID ?? "").trim(),
+    secretKey: (env.CLICK_SECRET_KEY ?? "").trim(),
+  },
   // O'zbekiston vaqti (UTC+5, yozgi vaqt yo'q): kunlik limit shu vaqt bo'yicha hisoblanadi
   tzOffsetHours: 5,
 };

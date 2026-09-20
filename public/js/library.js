@@ -80,13 +80,14 @@ async function showPlaylists() {
   content.replaceChildren(
     el(
       "div",
-      { class: "videos" },
+      { class: "sgrid" },
       lists.map((list) =>
         el(
           "a",
-          { class: "vcard", href: `/library?tab=playlists&list=${list.id}` },
-          el("div", { class: "vcard__thumb" }, list.cover_url ? el("img", { src: list.cover_url, alt: "", loading: "lazy" }) : el("span", { class: "thumb-fallback", "aria-hidden": "true", text: "📋" })),
-          el("div", { class: "vcard__meta" }, el("div", {}, el("h3", { text: list.name }), el("p", { text: `${list.count} ta video` })))
+          { class: "scard", href: `/library?tab=playlists&list=${list.id}` },
+          el("div", { class: "scard__thumb" }, list.cover_url ? el("img", { src: list.cover_url, alt: "", loading: "lazy" }) : el("span", { class: "thumb-fallback", "aria-hidden": "true", text: "📋" })),
+          el("h3", { text: list.name }),
+          el("p", { class: "scard__by", text: `${list.count} ta video` })
         )
       )
     )
@@ -123,7 +124,7 @@ async function showPlaylist(id) {
   content.replaceChildren(
     el(
       "div",
-      { class: "videos" },
+      { class: "sgrid" },
       playlist.videos.map((video) =>
         el(
           "div",

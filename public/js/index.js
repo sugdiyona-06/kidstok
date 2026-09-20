@@ -1,11 +1,40 @@
-import { $, api, avatarEl, channelBubble, childPicker, el, loadContext, mountChrome, renderError, renderMixed, renderVideos, shortCard } from "./core.js";
+import { $, api, avatarEl, channelBubble, childPicker, el, emptyBox, loadContext, mountCats, mountChrome, renderError, renderVideos } from "./core.js";
+import { catSit } from "./cats.js";
+import { createReels, gateSpec } from "./reels.js";
 
 mountChrome("home");
 
 const ctx = await loadContext().catch(() => ({ session: null, me: null, children: [], child: null, isPro: false }));
 const locked = ctx.session ? !ctx.isPro : true;
 
-/* ---------- Tepa qism: mehmon / bola tanlash / salomlashish ---------- */
+/* ---------- Tepadagi lenta: so'nggi videolar (Instagram Reels kabi) ---------- */
+const feed = $("#feed");
+$(".feed__loading-cat")?.insertAdjacentHTML("afterbegin", catSit("orange"));
+
+const empty = (title, text) => {
+  feed.classList.add("feed--empty");
+  feed.replaceChildren(emptyBox(title, text));
+};
+
+createReels({
+  feed,
+  overlay: $("#overlay"),
+  prev: $("#prev"),
+  next: $("#next"),
+  first: 10,
+  infinite: false, // bosh sahifada 10 ta; keyin pastdagi bo'limlar, to'liq lenta — /shorts
+  endCard: true,
+  preview: gateSpec(ctx), // mehmon / Pro yo'q / bola tanlanmagan bo'lsa: faqat muqovalar va qulf
+  onEmpty: () => empty("Hozircha videolar yo'q", "Tez orada yangi videolar qo'shiladi."),
+  onError: (error) => empty("Yuklab bo'lmadi", error.message),
+}).start();
+
+// "Bo'limlar" tugmalari lentadan pastdagi bo'limlarga o'tkazadi
+document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-jump]")) $("#below").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+/* ---------- Pastdagi bo'limlar ---------- */
 const notice = $("#notice");
 const addNotice = (text, linkHref, linkText) =>
   notice.append(el("div", { class: "notice" }, el("p", { text }), el("a", { class: "btn btn--small", href: linkHref, text: linkText })));
@@ -20,6 +49,7 @@ if (!ctx.session) {
       avatarEl(ctx.child.avatar, "avatar avatar--lg"),
       el("div", {}, el("h1", { text: `Salom, ${ctx.child.name}!` }), el("p", { text: "Bugun nima ko‘ramiz?" }))
     );
+    mountCats(); // greeting ichi almashtirilgani uchun mo'ralovchi mushukni qayta qo'shamiz
   } else if (ctx.children.length) {
     $("#picker-block").hidden = false;
     $("#picker").replaceChildren(...childPicker(ctx.children, null));
@@ -29,21 +59,10 @@ if (!ctx.session) {
   if (!ctx.isPro) addNotice("Videolarni tomosha qilish uchun Pro obuna kerak.", "/pro", "Pro haqida");
 }
 
-/* ---------- Kontent ---------- */
 const latest = $("#latest");
 
 try {
-  const [categories, channels, videos, shorts] = await Promise.all([
-    api("/categories"),
-    api("/channels"),
-    api("/videos?format=long&limit=12"),
-    api("/videos?format=short&limit=10"),
-  ]);
-
-  if (shorts.length) {
-    $("#shorts-block").hidden = false;
-    $("#shorts-rail").replaceChildren(...shorts.map((v) => shortCard(v, { locked })));
-  }
+  const [categories, channels, videos] = await Promise.all([api("/categories"), api("/channels"), api("/videos?limit=12")]);
 
   if (categories.length) {
     $("#cats-block").hidden = false;
@@ -63,10 +82,10 @@ try {
   renderVideos(latest, videos, { locked, empty: "Hozircha videolar yo'q", emptyText: "Admin paneldan birinchi videoni yuklang." });
 
   if (ctx.child) {
-    const recent = await api("/child/history?limit=6");
+    const recent = await api("/child/history?limit=8");
     if (recent.length) {
       $("#recent-block").hidden = false;
-      renderMixed($("#recent"), recent, { locked });
+      renderVideos($("#recent"), recent, { locked });
     }
   }
 } catch (error) {
