@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nurchashma — Ota-onalar bo‘limi</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/vendor/fonts/fredoka/index.css">
+  <link rel="stylesheet" href="/vendor/fonts/nunito/index.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main>
+    <!-- Kirish / PIN darvozasi -->
+    <div class="narrow" id="gate">
+      <div class="panel">
+        <h1 id="gate-title">Ota-onalar bo‘limi</h1>
+        <p class="muted" id="gate-text">Tekshirilmoqda...</p>
+        <p class="form-error" id="gate-error" role="alert" hidden></p>
+
+        <form id="pin-form" hidden>
+          <div class="field">
+            <label for="pin">PIN-kod (4 ta raqam)</label>
+            <input class="pin-input" id="pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" required>
+          </div>
+          <div class="field" id="pin2-field" hidden>
+            <label for="pin2">PIN-kodni takrorlang</label>
+            <input class="pin-input" id="pin2" name="pin2" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off">
+          </div>
+          <button class="btn" type="submit" id="pin-submit">Ochish</button>
+        </form>
+        <a class="btn" id="gate-link" href="/profile" hidden>Kirish</a>
+      </div>
+    </div>
+
+    <!-- Asosiy panel -->
+    <div class="wrap admin" id="panel" hidden>
+      <div class="rail" role="tablist" aria-label="Bo‘limlar" aria-orientation="vertical">
+        <button type="button" role="tab" data-tab="kids" aria-selected="true">Bolalar</button>
+        <button type="button" role="tab" data-tab="history" aria-selected="false">Tarix</button>
+        <button type="button" role="tab" data-tab="plan" aria-selected="false">Obuna</button>
+        <button type="button" role="tab" data-tab="pin" aria-selected="false">PIN-kod</button>
+        <button type="button" id="lock" class="btn--lock">Qulflash</button>
+      </div>
+
+      <div>
+        <section id="tab-kids" role="tabpanel">
+          <div class="toolbar">
+            <h1>Bola profillari</h1>
+            <button class="btn" type="button" id="add-kid">Bola qo‘shish</button>
+          </div>
+          <div class="panel" id="kids-list"></div>
+        </section>
+
+        <section id="tab-history" role="tabpanel" hidden>
+          <div class="toolbar">
+            <h1>Tomosha tarixi</h1>
+            <div class="field">
+              <label class="hint" for="history-kid">Bola</label>
+              <select id="history-kid"></select>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>So‘nggi 7 kun</h2>
+            <div class="table-wrap"><table><thead><tr><th>Sana</th><th>Tomosha vaqti</th></tr></thead><tbody id="usage-body"></tbody></table></div>
+          </div>
+          <div class="panel">
+            <h2>Ko‘rilgan videolar</h2>
+            <div class="table-wrap"><table><thead><tr><th>Video</th><th>Oxirgi marta</th><th>Jami vaqt</th></tr></thead><tbody id="history-body"></tbody></table></div>
+          </div>
+        </section>
+
+        <section id="tab-plan" role="tabpanel" hidden>
+          <div class="toolbar"><h1>Obuna</h1></div>
+          <div class="panel">
+            <p id="plan-status"></p>
+            <a class="btn" href="/pro">Pro obuna haqida</a>
+          </div>
+        </section>
+
+        <section id="tab-pin" role="tabpanel" hidden>
+          <div class="toolbar"><h1>PIN-kodni almashtirish</h1></div>
+          <div class="panel">
+            <p class="form-error" id="pin-change-error" role="alert" hidden></p>
+            <form id="pin-change-form">
+              <div class="field">
+                <label for="cur-pin">Hozirgi PIN-kod</label>
+                <input class="pin-input" id="cur-pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" required>
+              </div>
+              <div class="field">
+                <label for="new-pin">Yangi PIN-kod</label>
+                <input class="pin-input" id="new-pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" required>
+              </div>
+              <button class="btn" type="submit">Almashtirish</button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bola qo'shish / tahrirlash -->
+  <dialog class="sheet" id="kid-dialog" aria-labelledby="kid-title">
+    <button class="sheet__close" type="button" id="kid-close" aria-label="Yopish">×</button>
+    <h2 id="kid-title">Bola qo‘shish</h2>
+    <p class="form-error" id="kid-error" role="alert" hidden></p>
+    <form id="kid-form">
+      <div class="field">
+        <label for="k-name">Ismi</label>
+        <input id="k-name" type="text" maxlength="30" required>
+      </div>
+      <div class="field">
+        <label for="k-age">Yoshi</label>
+        <select id="k-age" required>
+          <option value="2">2 yosh</option><option value="3">3 yosh</option><option value="4">4 yosh</option>
+          <option value="5">5 yosh</option><option value="6">6 yosh</option>
+        </select>
+        <span class="hint">Faqat shu yoshga mos videolar ko‘rsatiladi.</span>
+      </div>
+      <fieldset class="field">
+        <legend>Rasmi</legend>
+        <div class="avatar-choices" id="k-avatars"></div>
+      </fieldset>
+      <div class="field">
+        <label for="k-limit">Kunlik tomosha vaqti</label>
+        <select id="k-limit">
+          <option value="">Cheklovsiz</option>
+          <option value="15">15 daqiqa</option><option value="30">30 daqiqa</option><option value="45">45 daqiqa</option>
+          <option value="60">1 soat</option><option value="90">1,5 soat</option><option value="120">2 soat</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="submit">Saqlash</button>
+        <button class="btn btn--ghost" type="button" id="kid-cancel">Bekor qilish</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="/vendor/supabase.js"></script>
+  <script type="module" src="/js/parent.js"></script>
+</body>
+</html>

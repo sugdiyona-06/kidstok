@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Nurchashma — Shorts</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/vendor/fonts/fredoka/index.css">
+  <link rel="stylesheet" href="/vendor/fonts/nunito/index.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="page-shorts">
+  <header class="site-header" id="site-header"></header>
+
+  <main class="shorts-main">
+    <div class="shorts-stage" id="stage" hidden>
+      <div class="feed" id="feed" tabindex="0" aria-label="Shorts lentasi"></div>
+      <div class="feed-nav">
+        <button class="feed-nav__btn" type="button" id="prev" aria-label="Oldingi video">↑</button>
+        <button class="feed-nav__btn" type="button" id="next" aria-label="Keyingi video">↓</button>
+      </div>
+      <div class="feed-overlay" id="overlay" hidden></div>
+    </div>
+    <div class="wrap narrow" id="shorts-gate" hidden></div>
+  </main>
+
+  <script src="/vendor/supabase.js"></script>
+  <script type="module" src="/js/shorts.js"></script>
+</body>
+</html>

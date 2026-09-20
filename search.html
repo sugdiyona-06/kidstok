@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nurchashma — Qidiruv</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/vendor/fonts/fredoka/index.css">
+  <link rel="stylesheet" href="/vendor/fonts/nunito/index.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main class="pb">
+    <div class="wrap">
+      <div class="page-head">
+        <h1>Qidiruv</h1>
+        <form class="searchbar" id="search-form" role="search" data-peek="gray">
+          <input type="search" id="q" name="q" placeholder="Video nomini yozing" aria-label="Qidiruv so‘zi" autocomplete="off">
+          <button class="btn" type="submit">Qidirish</button>
+        </form>
+        <div class="chips" id="chips" role="group" aria-label="Bo‘lim bo‘yicha saralash"></div>
+      </div>
+      <p class="result-meta" id="meta" aria-live="polite"></p>
+      <div id="results" aria-live="polite"></div>
+      
+    </div>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="/vendor/supabase.js"></script>
+  <script type="module" src="/js/search.js"></script>
+</body>
+</html>

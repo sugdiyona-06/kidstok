@@ -8,12 +8,18 @@
 
 | Kim | Nima qila oladi |
 |---|---|
-| **Mehmon** | Videolar ro‘yxatini ko‘radi, lekin ijro eta olmaydi |
+| **Mehmon** | Bosh sahifadagi lentada videolar muqovasini (qulf bilan) ko‘radi, lekin ijro eta olmaydi |
 | **Ota-ona** | Ro‘yxatdan o‘tadi, PIN o‘rnatadi, 6 tagacha bola profili yaratadi (ism, yosh 2–6, rasm, kunlik limit), bola tarixini ko‘radi |
-| **Bola** (ota-ona akkaunti ichida) | Ikki formatda video ko‘radi: oddiy (uzun, 16:9) va **Shorts** (tik lenta, surib ko‘riladi); yoqtiradi, ijro ro‘yxati tuzadi, kanallarga obuna bo‘ladi |
+| **Bola** (ota-ona akkaunti ichida) | Tik (9:16) qisqa videolarni Instagram Reels / YouTube Shorts kabi lentada ko‘radi (surib yoki ikki marta bosib yoqtiradi); ijro ro‘yxati tuzadi, kanallarga obuna bo‘ladi |
 | **Admin** | Video/kanal/bo‘lim qo‘shadi, Pro obunani beradi yoki bekor qiladi, rollarni boshqaradi |
 
-Menyu: **Asosiy · Shorts · Qidiruv · Profil**. Shorts sahifasida videolar birin-ketin tik lentada chiqadi (telefonda surish, kompyuterda ↑↓ tugmalari), tugagach keyingisiga o‘zi o‘tadi.
+**Sayt faqat tik (9:16) qisqa videolar bilan ishlaydi** (gorizontal 16:9 video yo‘q).
+
+Menyu: **Asosiy · Shorts · Qidiruv · Profil** (telefonda ekran pastida, katta tugmalar bilan).
+
+- **Asosiy:** kirishingiz bilan tepada so‘nggi videolar lentasi ochiladi (Instagram Reels kabi): telefonda butun ekran, kompyuterda o‘rtada tik ustun. Surganda video bittadan “yopishadi”, ko‘rinib turgani o‘zi ijro bo‘ladi, tugagach keyingisiga o‘tadi; ikki marta bosish — yoqtirish. Lentaning oxirida (yoki “Bo‘limlar ⬇” tugmasi bilan) pastdagi bo‘limlarga o‘tiladi: bo‘limlar, yaqinda ko‘rilganlar, kanallar, yangi videolar.
+- **Shorts:** to‘liq (cheksiz) lenta.
+- Kompyuterda ↑ ↓ tugmalari yoki klaviatura strelkalari ham ishlaydi.
 
 Ota-ona nazorati: 4 xonali PIN (5 marta xato → 5 daqiqa qulf), yoshga mos videolar, kunlik tomosha limiti (O‘zbekiston vaqti bilan), tarix.
 
@@ -68,28 +74,23 @@ Profil sahifasida **Admin panel** tugmasi paydo bo‘ladi (`/admin`).
 
 Admin panelda: **Kanallar** → kanal yarating (ixtiyoriy) → **Videolar** → **Yangi video**.
 
-- **Format:** “Oddiy video” (gorizontal 16:9, 1–3 daqiqa) yoki “Shorts” (tik 9:16, 60 soniyagacha tavsiya). Tik video tanlansa, format o‘zi “Shorts” bo‘ladi (kerak bo‘lsa o‘zgartirasiz).
-- **Video:** MP4 (H.264) yoki WebM, 50 MB gacha. Davomiyligi avtomatik aniqlanadi.
-- **Muqova:** JPG/PNG/WebP, 5 MB gacha (o‘zingiz yuklaysiz). Oddiy video uchun 16:9, Shorts uchun tik 9:16 rasm.
+- **Video:** faqat **tik (9:16)** video: MP4 (H.264) yoki WebM, 50 MB gacha, 15–90 soniya tavsiya etiladi. Davomiyligi avtomatik aniqlanadi. Gorizontal video yuklansa, admin panel ogohlantiradi (baribir ishlaydi, lekin kichik ko‘rinadi).
+- **Muqova:** tik (9:16) rasm, JPG/PNG/WebP, 5 MB gacha (o‘zingiz yuklaysiz).
 - **Yosh:** “qaysi yoshdan boshlab” — bola yoshi bundan kichik bo‘lsa, video unga ko‘rinmaydi.
 
-Videoni yengil qilish uchun ([ffmpeg](https://ffmpeg.org)):
-
-```bash
-ffmpeg -i asl.mov -vf "scale=-2:480" -c:v libx264 -crf 26 -preset slow -c:a aac -b:a 96k -movflags +faststart video.mp4
-```
-
-Shorts uchun (tik 480×854):
+Tik videoni yengil qilish uchun ([ffmpeg](https://ffmpeg.org)), 480×854:
 
 ```bash
 ffmpeg -i asl.mov -vf "scale=480:854:force_original_aspect_ratio=increase,crop=480:854" -c:v libx264 -crf 26 -preset slow -c:a aac -b:a 96k -movflags +faststart short.mp4
 ```
 
-3 daqiqalik 480p video taxminan 15–25 MB bo‘ladi.
+60 soniyalik shunday video taxminan 5–10 MB bo‘ladi.
+
+**Eski (gorizontal) videolar bo‘lsa:** `supabase/update-shorts-only.sql` ni ishga tushiring: mavjud videolar o‘chmaydi, hammasi Shorts formatiga o‘tadi.
 
 ## 5. Pro obunani berish
 
-To‘lov tizimi **hali ulanmagan**: to‘lovni o‘zingiz qabul qilib, admin paneldagi **Foydalanuvchilar** bo‘limida ota-ona qatoridan “+30 / +90 / +365 kun” ni tanlaysiz (yangi muddat amaldagi obuna tugagach davom etadi; “Bekor qilish” obunani darrov to‘xtatadi).
+Online to‘lov ulanmagan bo‘lsa (yoki boshqa yo‘l bilan to‘lov olsangiz) to‘lovni o‘zingiz qabul qilib, admin paneldagi **Foydalanuvchilar** bo‘limida ota-ona qatoridan “+30 / +90 / +365 kun” ni tanlaysiz (yangi muddat amaldagi obuna tugagach davom etadi; “Bekor qilish” obunani darrov to‘xtatadi).
 
 `PRO_CONTACT_URL` (masalan, `https://t.me/sizning_akkaunt`) ni kiritsangiz, `/pro` sahifasida “Obunani faollashtirish” tugmasi shu havolaga olib boradi.
 
@@ -106,6 +107,41 @@ To‘lov tizimi **hali ulanmagan**: to‘lovni o‘zingiz qabul qilib, admin pan
 - Render‘ning bepul tarifi 15 daqiqa faolsizlikdan keyin “uxlaydi”, birinchi ochilish 30–60 soniya olishi mumkin. Doimiy foydalanish uchun pullik tarifga o‘ting.
 - Supabase bepul loyihalari uzoq vaqt faolsizlikdan keyin pauza qilinishi mumkin; shartlarni Supabase narxlar sahifasida tekshiring.
 - PIN xatolari hisobi serverning xotirasida turadi: server qayta ishga tushsa nolga tushadi. Bitta server nusxasi uchun bu yetarli.
+
+## Online to‘lov (Payme va Click)
+
+Sayt to‘lovni **o‘zi qabul qiladi**: ota-ona `/pro` sahifasida reja (1 oy, 3 oy, 1 yil) va usulni (Payme yoki Click) tanlaydi, to‘lagach Pro obuna **avtomatik** faollashadi. Qo‘lda berish (admin panel → Foydalanuvchilar) ham ishlayveradi.
+
+**Muhim:** bu qism yozilgan va sinalgan, lekin sizning Payme/Click akkauntingiz bilan **hali sinalmagan** (kalitlar sizda bo‘ladi). Avval albatta test rejimida sinang.
+
+### Sozlash
+
+1. **Narxlar** (so‘mda): Render → Environment → `PRICE_30`, `PRICE_90`, `PRICE_365`. Bo‘sh qoldirsangiz, namuna narxlar (29 000 / 79 000 / 249 000) ishlaydi, ularni o‘zgartiring.
+2. `SITE_URL` = sayt manzili, masalan `https://kidstok.onrender.com`.
+3. **Payme:** [Payme Business](https://business.paycom.uz) kabinetida kassa oching, keyin:
+   - **Endpoint URL:** `https://SAYT/api/payments/payme`
+   - **Merchant ID** → `PAYME_MERCHANT_ID`, **kalit (Key)** → `PAYME_KEY`
+   - **Hisob maydoni:** nomi `order_id`
+   - Sinov: kabinetdagi *Sandbox* / test kassa kaliti bilan `PAYME_TEST=true` qo‘ying va Payme’ning “Test” bo‘limidagi tekshiruvlarni ishga tushiring. Hammasi o‘tgach, haqiqiy kalit bilan `PAYME_TEST=false`.
+4. **Click:** [Click Merchant](https://merchant.click.uz) kabinetida xizmat oching, keyin:
+   - **Prepare URL:** `https://SAYT/api/payments/click/prepare`
+   - **Complete URL:** `https://SAYT/api/payments/click/complete`
+   - `CLICK_SERVICE_ID`, `CLICK_MERCHANT_ID`, `CLICK_SECRET_KEY` qiymatlarini kiriting.
+5. Bazaga yangilanishni qo‘shing: agar oldin `schema.sql` ishga tushirgan bo‘lsangiz, faqat `supabase/update-payments.sql` faylini SQL Editor’da ishga tushiring (yangi jadvallar: `orders`, `payments`).
+6. Render’da o‘zgaruvchilarni saqlagach, sayt qayta ishga tushadi. `/pro` sahifasida narxlar va “Payme/Click bilan to‘lash” tugmalari paydo bo‘ladi (kalit kiritilmagan usulning tugmasi ko‘rinmaydi).
+
+To‘lovlarni admin panelda **To‘lovlar** bo‘limida ko‘rasiz.
+
+### Qanday ishlaydi (xavfsizlik)
+
+- Summa va reja **serverda** belgilanadi, brauzerdan kelgan narxga ishonilmaydi.
+- Payme (`Basic` avtorizatsiya) va Click (imzo `md5`) so‘rovlari tekshiriladi, imzosi noto‘g‘ri so‘rov Pro bermaydi.
+- Bir to‘lov ikki marta hisoblanmaydi (takroriy so‘rovlar xavfsiz). Payme to‘lovni qaytarsa, Pro kunlari ayiriladi.
+- Yangi obuna amaldagisi tugagach davom etadi (kunlar qo‘shiladi).
+
+## Ko‘p foydalanuvchi bo‘lganda
+
+- So‘rovlar limiti: kirgan foydalanuvchi o‘z tokeni bo‘yicha, kirmaganlar IP bo‘yicha hisoblanadi (mobil operatorlarda ko‘pchilik bitta IP orqali chiqadi, shuning uchun IP bo‘yicha limit begunoh odamlarni to‘sib qo‘yardi). Kerak bo‘lsa `RATE_LIMIT_MAX` (15 daqiqadagi so‘rovlar soni, standart 1200) ni Render’da o‘zgartiring.
 
 ## Xavfsizlik modeli
 

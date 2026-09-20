@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nurchashma — Yangi parol</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/vendor/fonts/fredoka/index.css">
+  <link rel="stylesheet" href="/vendor/fonts/nunito/index.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main>
+    <div class="narrow">
+      <section class="panel">
+        <h1>Yangi parol</h1>
+        <p class="form-error" id="reset-error" role="alert" hidden></p>
+        <p class="form-note" id="reset-note" role="status" hidden></p>
+        <form id="reset-form" hidden>
+          <div class="field">
+            <label for="new-password">Yangi parol</label>
+            <input id="new-password" type="password" autocomplete="new-password" minlength="8" required>
+            <span class="hint">Kamida 8 ta belgi</span>
+          </div>
+          <div class="field">
+            <label for="new-password2">Parolni takrorlang</label>
+            <input id="new-password2" type="password" autocomplete="new-password" minlength="8" required>
+          </div>
+          <button class="btn" type="submit">Parolni saqlash</button>
+        </form>
+        <p id="reset-invalid" hidden>Havola eskirgan yoki noto‘g‘ri. <a href="/profile">Qaytadan urinib ko‘ring</a>.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="/vendor/supabase.js"></script>
+  <script type="module" src="/js/reset.js"></script>
+</body>
+</html>

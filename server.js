@@ -1,7 +1,8 @@
 import dns from "node:dns";
 import express from "express";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
+import crypto from "node:crypto";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -10,6 +11,8 @@ import { catalog } from "./src/routes/catalog.js";
 import { kids } from "./src/routes/kids.js";
 import { parent } from "./src/routes/parent.js";
 import { admin } from "./src/routes/admin.js";
+import { orders } from "./src/routes/orders.js";
+import { payments } from "./src/routes/payments.js";
 import { HttpError, isNetworkError } from "./src/util.js";
 import { supabase } from "./src/db.js";
 
@@ -41,13 +44,32 @@ app.use(
   })
 );
 app.use(express.json({ limit: "100kb" }));
-app.use("/api", rateLimit({ windowMs: 15 * 60 * 1000, limit: 1200, standardHeaders: true, legacyHeaders: false }));
+// Click so'rovlari form-urlencoded ko'rinishida keladi
+app.use("/api/payments", express.urlencoded({ extended: false, limit: "20kb" }));
+// So'rovlar limiti: kirgan foydalanuvchi o'z tokeni bo'yicha hisoblanadi (mobil operatorlarda ko'p odam
+// bitta IP orqali chiqadi, shuning uchun IP bo'yicha limit begunoh foydalanuvchilarni to'sib qo'yardi).
+// Kirmaganlar IP bo'yicha hisoblanadi. RATE_LIMIT_MAX bilan o'zgartirish mumkin.
+app.use(
+  "/api",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: Number(process.env.RATE_LIMIT_MAX) || 1200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+      const auth = req.headers.authorization;
+      return auth ? `u:${crypto.createHash("sha1").update(auth).digest("hex")}` : ipKeyGenerator(req.ip);
+    },
+  })
+);
 
 /* ---------- API ---------- */
 app.use("/api/admin", admin);
 app.use("/api", catalog);
 app.use("/api", kids);
 app.use("/api", parent);
+app.use("/api", orders);
+app.use("/api", payments);
 app.use("/api", (_req, _res, next) => next(new HttpError(404, "Topilmadi")));
 
 /* ---------- Frontend (statik fayllar) ---------- */

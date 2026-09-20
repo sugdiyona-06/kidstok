@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nurchashma — Admin panel</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/vendor/fonts/fredoka/index.css">
+  <link rel="stylesheet" href="/vendor/fonts/nunito/index.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main>
+    <div class="narrow" id="gate">
+      <div class="panel">
+        <h1>Admin panel</h1>
+        <p class="muted" id="gate-message">Tekshirilmoqda...</p>
+        <a class="btn" id="gate-link" href="/profile" hidden>Profilga o‘tish</a>
+      </div>
+    </div>
+
+    <div class="wrap admin" id="panel" hidden>
+      <div class="rail" role="tablist" aria-label="Admin bo‘limlari" aria-orientation="vertical">
+        <button type="button" role="tab" data-tab="overview" aria-selected="true">Umumiy</button>
+        <button type="button" role="tab" data-tab="videos" aria-selected="false">Videolar</button>
+        <button type="button" role="tab" data-tab="channels" aria-selected="false">Kanallar</button>
+        <button type="button" role="tab" data-tab="categories" aria-selected="false">Bo‘limlar</button>
+        <button type="button" role="tab" data-tab="users" aria-selected="false">Foydalanuvchilar</button>
+        <button type="button" role="tab" data-tab="payments" aria-selected="false">To‘lovlar</button>
+      </div>
+
+      <div>
+        <!-- Umumiy -->
+        <section id="tab-overview" role="tabpanel">
+          <div class="toolbar"><h1>Umumiy ko‘rinish</h1></div>
+          <div class="stats" id="stats"></div>
+        </section>
+
+        <!-- Videolar -->
+        <section id="tab-videos" role="tabpanel" hidden>
+          <div class="toolbar">
+            <h1>Videolar</h1>
+            <button class="btn" type="button" id="new-video">Yangi video</button>
+          </div>
+          <div class="table-wrap" id="videos-wrap">
+            <table>
+              <thead><tr><th>Video</th><th>Yosh</th><th>Holati</th><th>Amallar</th></tr></thead>
+              <tbody id="videos-body"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="videos-empty" hidden>
+            <strong>Videolar yo‘q</strong>
+            <span>“Yangi video” tugmasi bilan birinchisini yuklang.</span>
+          </div>
+        </section>
+
+        <!-- Kanallar -->
+        <section id="tab-channels" role="tabpanel" hidden>
+          <div class="toolbar">
+            <h1>Kanallar</h1>
+            <button class="btn" type="button" id="new-channel">Yangi kanal</button>
+          </div>
+          <div class="table-wrap" id="channels-wrap">
+            <table>
+              <thead><tr><th>Kanal</th><th>Amallar</th></tr></thead>
+              <tbody id="channels-body"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="channels-empty" hidden><strong>Kanallar yo‘q</strong><span>Videolarni kanallar bo‘yicha guruhlash uchun kanal yarating.</span></div>
+        </section>
+
+        <!-- Bo'limlar -->
+        <section id="tab-categories" role="tabpanel" hidden>
+          <div class="toolbar">
+            <h1>Bo‘limlar</h1>
+            <button class="btn" type="button" id="new-category">Yangi bo‘lim</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Bo‘lim</th><th>Tartib</th><th>Amallar</th></tr></thead>
+              <tbody id="categories-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Foydalanuvchilar -->
+        <section id="tab-users" role="tabpanel" hidden>
+          <div class="toolbar"><h1>Foydalanuvchilar</h1></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Ota-ona</th><th>Pro obuna</th><th>Rol</th></tr></thead>
+              <tbody id="users-body"></tbody>
+            </table>
+          </div>
+          <p class="hint">Payme/Click orqali to‘lov avtomatik hisoblanadi. Boshqa yo‘l bilan to‘lov qabul qilsangiz, Pro obunani shu yerdan qo‘lda faollashtirasiz. Muddat amaldagi obuna tugagach davom etadi.</p>
+        </section>
+
+        <!-- To'lovlar -->
+        <section id="tab-payments" role="tabpanel" hidden>
+          <div class="toolbar"><h1>To‘lovlar</h1></div>
+          <div class="table-wrap" id="payments-wrap">
+            <table>
+              <thead><tr><th>Sana</th><th>Ota-ona</th><th>Usul</th><th>Summa</th><th>Holati</th></tr></thead>
+              <tbody id="payments-body"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="payments-empty" hidden><strong>Hali to‘lov yo‘q</strong><span>Payme yoki Click orqali kelgan to‘lovlar shu yerda ko‘rinadi.</span></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Video qo'shish / tahrirlash -->
+  <dialog class="sheet sheet--wide" id="video-dialog" aria-labelledby="video-title">
+    <button class="sheet__close" type="button" data-close aria-label="Yopish">×</button>
+    <h2 id="video-title">Yangi video</h2>
+    <p class="form-error" id="video-error" role="alert" hidden></p>
+    <form id="video-form">
+      <div class="field">
+        <label for="v-title">Sarlavha</label>
+        <input id="v-title" type="text" maxlength="150" required>
+      </div>
+      <div class="field">
+        <label for="v-desc">Tavsif</label>
+        <textarea id="v-desc" maxlength="1000" rows="3"></textarea>
+      </div>
+      <div class="field">
+        <label for="v-channel">Kanal</label>
+        <select id="v-channel"></select>
+      </div>
+      <div class="field">
+        <label for="v-category">Bo‘lim</label>
+        <select id="v-category"></select>
+      </div>
+      <div class="field">
+        <label for="v-age">Qaysi yoshdan boshlab</label>
+        <select id="v-age">
+          <option value="2">2 yoshdan</option><option value="3">3 yoshdan</option><option value="4">4 yoshdan</option>
+          <option value="5">5 yoshdan</option><option value="6">6 yoshdan</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="v-file">Video fayli</label>
+        <input id="v-file" type="file" accept="video/mp4,video/webm">
+        <span class="hint" id="v-file-hint">Tik (vertikal, 9:16) video, MP4 yoki WebM, 50 MB gacha. 15–90 soniya tavsiya etiladi.</span>
+      </div>
+      <div class="field">
+        <label for="v-thumb">Muqova rasmi</label>
+        <input id="v-thumb" type="file" accept="image/jpeg,image/png,image/webp">
+        <span class="hint" id="v-thumb-hint">Tik (9:16) rasm, JPG, PNG yoki WebP, 5 MB gacha.</span>
+      </div>
+      <label class="check"><input type="checkbox" id="v-published" checked> Saytda ko‘rsatish</label>
+      <div class="form-actions">
+        <button class="btn" type="submit" id="video-save">Saqlash</button>
+        <button class="btn btn--ghost" type="button" data-close>Bekor qilish</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Kanal qo'shish / tahrirlash -->
+  <dialog class="sheet" id="channel-dialog" aria-labelledby="channel-title">
+    <button class="sheet__close" type="button" data-close aria-label="Yopish">×</button>
+    <h2 id="channel-title">Yangi kanal</h2>
+    <p class="form-error" id="channel-error" role="alert" hidden></p>
+    <form id="channel-form">
+      <div class="field">
+        <label for="c-name">Nomi</label>
+        <input id="c-name" type="text" maxlength="60" required>
+      </div>
+      <div class="field">
+        <label for="c-desc">Tavsif</label>
+        <textarea id="c-desc" maxlength="300" rows="3"></textarea>
+      </div>
+      <div class="field">
+        <label for="c-avatar">Kanal rasmi</label>
+        <input id="c-avatar" type="file" accept="image/jpeg,image/png,image/webp">
+        <span class="hint">Kvadrat rasm yaxshi ko‘rinadi.</span>
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="submit" id="channel-save">Saqlash</button>
+        <button class="btn btn--ghost" type="button" data-close>Bekor qilish</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Bo'lim qo'shish / tahrirlash -->
+  <dialog class="sheet" id="category-dialog" aria-labelledby="category-title">
+    <button class="sheet__close" type="button" data-close aria-label="Yopish">×</button>
+    <h2 id="category-title">Yangi bo‘lim</h2>
+    <p class="form-error" id="category-error" role="alert" hidden></p>
+    <form id="category-form">
+      <div class="field">
+        <label for="g-name">Nomi</label>
+        <input id="g-name" type="text" maxlength="40" required>
+      </div>
+      <div class="field">
+        <label for="g-emoji">Belgi (emoji)</label>
+        <input id="g-emoji" type="text" maxlength="8" placeholder="🎬">
+      </div>
+      <div class="field">
+        <label for="g-order">Tartib raqami</label>
+        <input id="g-order" type="number" min="0" max="999" value="0">
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="submit">Saqlash</button>
+        <button class="btn btn--ghost" type="button" data-close>Bekor qilish</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="/vendor/supabase.js"></script>
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

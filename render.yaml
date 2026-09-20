@@ -20,3 +20,25 @@ services:
         sync: false
       - key: PRO_CONTACT_URL
         sync: false
+      - key: SITE_URL
+        sync: false
+      - key: PRICE_30
+        sync: false
+      - key: PRICE_90
+        sync: false
+      - key: PRICE_365
+        sync: false
+      - key: PAYME_MERCHANT_ID
+        sync: false
+      - key: PAYME_KEY
+        sync: false
+      - key: PAYME_TEST
+        sync: false
+      - key: CLICK_SERVICE_ID
+        sync: false
+      - key: CLICK_MERCHANT_ID
+        sync: false
+      - key: CLICK_SECRET_KEY
+        sync: false
+      - key: RATE_LIMIT_MAX
+        sync: false
